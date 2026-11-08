@@ -1,0 +1,73 @@
+{
+  "name": "Fase 1 · Rimettersi in forma",
+  "version": "v2",
+  "startDate": "2026-10-19",
+  "endDate": "2026-11-27",
+  "schedule": {
+    "weekdays": [1, 3, 5],
+    "time": "15:00",
+    "rotation": ["A", "B"]
+  },
+  "generalNotes": "Finisci ogni serie con 2–3 ripetizioni ancora \"nel serbatoio\": l'ultima è impegnativa ma sempre pulita.",
+
+  "warmup": {
+    "title": "Riscaldamento",
+    "durationMinutes": 10,
+    "exercises": [
+      { "exerciseId": "cardio_riscaldamento", "reps": "5 minuti" },
+      { "exerciseId": "dislocazioni_bastone", "reps": "10" },
+      { "exerciseId": "rotazioni_busto", "reps": "10 per lato" },
+      { "exerciseId": "inclinazioni_laterali", "reps": "8 per lato" },
+      { "exerciseId": "good_morning_bastone", "reps": "10" },
+      { "exerciseId": "squat_lento", "reps": "10" },
+      { "exerciseId": "gatto_cammello", "reps": "10" },
+      { "exerciseId": "ponte_glutei", "reps": "12" }
+    ]
+  },
+
+  "workouts": [
+    {
+      "id": "A",
+      "name": "Scheda A",
+      "exercises": [
+        { "exerciseId": "leg_press", "sets": 3, "reps": "10–12", "restSeconds": 120, "alternatives": ["Hack squat (macchina)"] },
+        { "exerciseId": "chest_press", "sets": 3, "reps": "10–12", "restSeconds": 90, "alternatives": ["Panca piana con manubri"] },
+        { "exerciseId": "lat_machine", "sets": 3, "reps": "10–12", "restSeconds": 90, "alternatives": ["Pulldown al cavo", "Trazioni assistite"] },
+        { "exerciseId": "leg_curl_seduto", "sets": 3, "reps": "12–15", "restSeconds": 60, "alternatives": ["Leg curl sdraiato"] },
+        { "exerciseId": "shoulder_press_macchina", "sets": 2, "reps": "10–12", "restSeconds": 75, "alternatives": ["Lento con manubri da seduto"] },
+        { "exerciseId": "curl_manubri", "sets": 2, "reps": "12", "restSeconds": 60, "alternatives": ["Curl al cavo basso"] },
+        { "exerciseId": "crunch_macchina", "sets": 2, "reps": "12–15", "restSeconds": 60, "alternatives": ["Crunch inverso sul tappetino"] }
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Scheda B",
+      "exercises": [
+        { "exerciseId": "goblet_squat", "sets": 3, "reps": "10", "restSeconds": 120, "notes": "Settimane 1–2: box squat, ti siedi su una panca e ti rialzi. Dalla 3: senza panca.", "alternatives": ["Squat al multipower", "Leg press"] },
+        { "exerciseId": "pulley_basso", "sets": 3, "reps": "10–12", "restSeconds": 90, "alternatives": ["Rematore con manubrio", "Rematore alla macchina"] },
+        { "exerciseId": "panca_inclinata_manubri", "sets": 3, "reps": "10–12", "restSeconds": 90, "alternatives": ["Chest press inclinata (macchina)"] },
+        { "exerciseId": "hip_thrust_macchina", "sets": 3, "reps": "10–12", "restSeconds": 90, "alternatives": ["Iperestensioni a 45°"] },
+        { "exerciseId": "leg_extension", "sets": 2, "reps": "12–15", "restSeconds": 60, "alternatives": ["Affondi indietro con manubri leggeri"] },
+        { "exerciseId": "alzate_laterali_manubri", "sets": 2, "reps": "12–15", "restSeconds": 60, "alternatives": ["Alzate al cavo", "Macchina deltoidi"] },
+        { "exerciseId": "pushdown_cavo", "sets": 2, "reps": "12–15", "restSeconds": 60, "alternatives": ["French press con manubrio"] },
+        { "exerciseId": "crunch_macchina", "sets": 2, "reps": "12–15", "restSeconds": 60, "alternatives": ["Crunch inverso sul tappetino"] }
+      ]
+    }
+  ],
+
+  "abs": {
+    "title": "Addominali",
+    "exercises": [
+      { "exerciseId": "plank", "sets": 3, "reps": "30\"", "restSeconds": 45, "notes": "Ogni settimana +5\".", "alternatives": ["Plank sulle ginocchia"] },
+      { "exerciseId": "plank_laterale", "reps": "20\" per lato", "notes": "Con le ginocchia a terra all'inizio." },
+      { "exerciseId": "leg_raise", "reps": "10–12" },
+      { "exerciseId": "heel_touch", "reps": "12 per lato" }
+    ]
+  },
+
+  "cardio": {
+    "title": "Camminata in salita",
+    "durationMinutes": 30,
+    "description": "Tapis roulant, pendenza 10%, 5,5 km/h."
+  }
+}

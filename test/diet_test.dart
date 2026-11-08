@@ -1,0 +1,43 @@
+import 'dart:io';
+
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:my_workout/data/diet_repository.dart';
+import 'package:my_workout/models/diet.dart';
+
+void main() {
+  final json = File('assets/data/diet.json').readAsStringSync();
+  final diet = DietRepository.parse(json);
+
+  test('7 giorni, palestra lunedì mercoledì venerdì', () {
+    expect(diet.days.map((d) => d.shortName), ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']);
+    expect(diet.days.where((d) => d.training).map((d) => d.name), ['Lunedì', 'Mercoledì', 'Venerdì']);
+  });
+
+  test('pasti e quantità come nel PDF', () {
+    final monday = diet.days.first;
+    expect(monday.meals.map((m) => m.title), ['Pasta al pomodoro e tonno', 'Pollo e patate']);
+    final dinner = monday.meals[1];
+    final verdure = dinner.items.firstWhere((i) => i.foodId == 'verdure');
+    expect(verdure.amountLabel, '250–300 g');
+    final passata = monday.meals[0].items.firstWhere((i) => i.foodId == 'passata');
+    expect(passata.amountLabel, isNull);
+    expect(diet.slotFor(dinner).label, 'Cena · 19:30–20:00');
+    expect(diet.slotFor(dinner).emoji, '🌙');
+    expect(diet.slotFor(monday.meals[0]).emoji, '☀️');
+  });
+
+  test('i legumi compaiono solo martedì e giovedì', () {
+    expect(diet.days.where((d) => d.usesFood('legumi')).map((d) => d.name), ['Martedì', 'Giovedì']);
+  });
+
+  test('un alimento sconosciuto dà un errore chiaro', () {
+    final broken = json.replaceFirst('"foodId": "pasta"', '"foodId": "pastaa"');
+    expect(() => DietRepository.parse(broken), throwsA(isA<FormatException>()));
+  });
+
+  test('quantità senza decimali inutili', () {
+    expect(const MealItem(foodId: 'x', quantity: 90, unit: 'g').amountLabel, '90 g');
+    expect(const MealItem(foodId: 'x', quantity: 1.5, unit: 'kg').amountLabel, '1,5 kg');
+  });
+}

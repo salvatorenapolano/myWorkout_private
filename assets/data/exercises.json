@@ -1,0 +1,264 @@
+[
+  {
+    "id": "cardio_riscaldamento",
+    "name": "Cardio leggero",
+    "category": "warmup",
+    "muscles": [],
+    "description": "Cyclette, ellittica o tapis roulant. Devi riuscire a parlare, con il fiato un po' corto.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "dislocazioni_bastone",
+    "name": "Dislocazioni con bastone",
+    "category": "warmup",
+    "muscles": ["Spalle"],
+    "description": "Presa larga, braccia tese: porta il bastone da davanti a dietro la schiena e torna. Più allarghi le mani, più è facile.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "rotazioni_busto",
+    "name": "Rotazioni del busto",
+    "category": "warmup",
+    "muscles": ["Core"],
+    "description": "Bastone appoggiato sulle spalle, bacino fermo: ruota solo il busto.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "inclinazioni_laterali",
+    "name": "Inclinazioni laterali",
+    "category": "warmup",
+    "muscles": ["Core"],
+    "description": "Bastone sopra la testa a braccia tese, piegati di lato lentamente.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "good_morning_bastone",
+    "name": "Good morning con bastone",
+    "category": "warmup",
+    "muscles": ["Femorali", "Lombari"],
+    "description": "Bastone sulle spalle, ginocchia appena piegate: spingi il sedere indietro con la schiena dritta finché senti tirare dietro le cosce.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "squat_lento",
+    "name": "Squat lento",
+    "category": "warmup",
+    "muscles": ["Quadricipiti", "Glutei"],
+    "description": "Bastone in verticale davanti a te come appoggio. Scendi lento, petto alto.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "gatto_cammello",
+    "name": "Gatto-cammello",
+    "category": "warmup",
+    "muscles": ["Schiena"],
+    "description": "Tappetino. A quattro zampe: schiena in su, poi in giù, lentamente.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "ponte_glutei",
+    "name": "Ponte glutei",
+    "category": "warmup",
+    "muscles": ["Glutei"],
+    "description": "Tappetino. Sdraiato, piedi a terra: sali stringendo i glutei e tieni 2\" in alto.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+
+  {
+    "id": "leg_press",
+    "name": "Leg press",
+    "category": "weights",
+    "muscles": ["Quadricipiti", "Glutei"],
+    "description": "Piedi a larghezza spalle, a metà pedana. Scendi in 2\" finché la zona lombare resta attaccata allo schienale. Non bloccare le ginocchia.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=b4s_pQTwfz0"
+  },
+  {
+    "id": "chest_press",
+    "name": "Chest press",
+    "category": "weights",
+    "muscles": ["Pettorali", "Tricipiti", "Spalle"],
+    "description": "Maniglie all'altezza del petto, scapole indietro e in basso. Spingi in 1\", torna in 2\".",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=wrDFqozJ_c0"
+  },
+  {
+    "id": "lat_machine",
+    "name": "Lat machine",
+    "category": "weights",
+    "muscles": ["Dorsali", "Bicipiti"],
+    "description": "Busto appena inclinato indietro, petto in fuori. Porta la sbarra alla parte alta del petto tirando con i gomiti.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=EofhyPPGmRY"
+  },
+  {
+    "id": "leg_curl_seduto",
+    "name": "Leg curl seduto",
+    "category": "weights",
+    "muscles": ["Femorali"],
+    "description": "Schiena appoggiata. Fermati 1\" con la gamba piegata, risali lento.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=hEW553x_QTM"
+  },
+  {
+    "id": "shoulder_press_macchina",
+    "name": "Shoulder press (macchina)",
+    "category": "weights",
+    "muscles": ["Spalle", "Tricipiti"],
+    "description": "Schiena incollata allo schienale. Non scendere sotto il mento, non inarcare la zona lombare.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=-vOiM55746I"
+  },
+  {
+    "id": "curl_manubri",
+    "name": "Curl con manubri",
+    "category": "weights",
+    "muscles": ["Bicipiti"],
+    "description": "Gomiti fermi ai fianchi, niente slanci col busto.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=RfmDVeFwbJI"
+  },
+  {
+    "id": "plank",
+    "name": "Plank",
+    "category": "abs",
+    "muscles": ["Addome", "Core"],
+    "description": "Corpo dritto da testa a talloni, glutei e addome contratti.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "crunch_macchina",
+    "name": "Crunch alla macchina",
+    "category": "weights",
+    "muscles": ["Addome"],
+    "description": "Arrotola il busto portando lo sterno verso l'ombelico, non tirare con le braccia. Espira mentre ti chiudi, torna su lento.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=AxhVsJLNNBw"
+  },
+  {
+    "id": "goblet_squat",
+    "name": "Goblet squat",
+    "category": "weights",
+    "muscles": ["Quadricipiti", "Glutei"],
+    "description": "Manubrio al petto, petto alto, ginocchia verso le punte, schiena dritta.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "pulley_basso",
+    "name": "Pulley basso",
+    "category": "weights",
+    "muscles": ["Dorsali", "Romboidi", "Bicipiti"],
+    "description": "Busto fermo e dritto. Tira verso l'ombelico stringendo le scapole e tieni 1\".",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=2IfxWVKIS8s"
+  },
+  {
+    "id": "panca_inclinata_manubri",
+    "name": "Panca inclinata con manubri",
+    "category": "weights",
+    "muscles": ["Pettorali", "Spalle", "Tricipiti"],
+    "description": "Panca a 30°. Scendi in 2–3\" fino all'altezza del petto, spinta decisa.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=RStWonEJqws"
+  },
+  {
+    "id": "hip_thrust_macchina",
+    "name": "Hip thrust alla macchina",
+    "category": "weights",
+    "muscles": ["Glutei", "Femorali"],
+    "description": "Spingi con i talloni finché il busto è parallelo al pavimento, stringi i glutei 1\" in alto. Mento verso il petto, non inarcare.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=TO5juRMJJkU"
+  },
+  {
+    "id": "leg_extension",
+    "name": "Leg extension",
+    "category": "weights",
+    "muscles": ["Quadricipiti"],
+    "description": "Tieni 1\" in alto, scendi lento.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=9v7u3ofd9vA"
+  },
+  {
+    "id": "alzate_laterali_manubri",
+    "name": "Alzate laterali con manubri",
+    "category": "weights",
+    "muscles": ["Spalle"],
+    "description": "Gomiti appena piegati, sali fino all'altezza delle spalle. Pesi leggeri.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=yHdfKSgmSh0"
+  },
+  {
+    "id": "pushdown_cavo",
+    "name": "Pushdown al cavo",
+    "category": "weights",
+    "muscles": ["Tricipiti"],
+    "description": "Gomiti incollati ai fianchi, muovi solo gli avambracci.",
+    "tips": [],
+    "images": [],
+    "videoUrl": "https://www.youtube.com/watch?v=TqkBw486n9U"
+  },
+
+  {
+    "id": "plank_laterale",
+    "name": "Plank laterale",
+    "category": "abs",
+    "muscles": ["Obliqui", "Core"],
+    "description": "Sul fianco, in appoggio sull'avambraccio con il gomito sotto la spalla. Solleva il bacino finché il corpo è dritto da testa a piedi (o a ginocchia, all'inizio).",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "leg_raise",
+    "name": "Leg raise",
+    "category": "abs",
+    "muscles": ["Addome"],
+    "description": "Sdraiato sulla schiena, mani lungo i fianchi. Gambe tese: sollevale fino alla verticale e riscendi lento senza toccare terra. La zona lombare resta attaccata al tappetino.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  },
+  {
+    "id": "heel_touch",
+    "name": "Heel touch",
+    "category": "abs",
+    "muscles": ["Obliqui"],
+    "description": "Sdraiato, ginocchia piegate e piedi a terra. Stacca le spalle e piegati di lato portando la mano a toccare il tallone, alternando i lati.",
+    "tips": [],
+    "images": [],
+    "videoUrl": null
+  }
+]

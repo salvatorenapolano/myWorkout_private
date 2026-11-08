@@ -1,0 +1,272 @@
+import 'package:flutter/material.dart';
+
+import 'package:my_workout/data/weight_store.dart';
+import 'package:my_workout/features/workout/widgets/exercise_media.dart';
+import 'package:my_workout/models/exercise.dart';
+import 'package:my_workout/models/workout_plan.dart';
+import 'package:my_workout/utils/formatters.dart';
+
+/// Il dettaglio di un esercizio: anteprima, cosa dice la scheda,
+/// il tuo peso, come si esegue, consigli e alternative.
+class ExerciseDetailPage extends StatelessWidget {
+  const ExerciseDetailPage({
+    super.key,
+    required this.planned,
+    required this.exercise,
+    required this.sectionTitle,
+  });
+
+  final PlannedExercise planned;
+  final Exercise exercise;
+  final String sectionTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Scaffold(
+      // La freccia indietro la aggiunge l'AppBar da sola, perché sa
+      // che questa pagina è stata aperta con Navigator.push.
+      appBar: AppBar(title: Text(sectionTitle)),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        children: [
+          // Video YouTube se c'è, altrimenti l'anteprima SVG.
+          ExerciseMedia(exercise: exercise),
+          const SizedBox(height: 16),
+          Text(exercise.name, style: textTheme.headlineSmall),
+          if (exercise.muscles.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            // Wrap: come una Row, ma va a capo se non c'è spazio.
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [for (final m in exercise.muscles) Chip(label: Text(m))],
+            ),
+          ],
+          const SizedBox(height: 16),
+          _PlanCard(planned: planned),
+          if (exercise.hasWeight) ...[
+            const SizedBox(height: 12),
+            _WeightCard(exercise: exercise),
+          ],
+          _Section(
+            title: 'Come si esegue',
+            child: Text(exercise.description, style: textTheme.bodyLarge),
+          ),
+          if (exercise.tips.isNotEmpty)
+            _Section(
+              title: 'Consigli',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final tip in exercise.tips)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text('• $tip', style: textTheme.bodyLarge),
+                    ),
+                ],
+              ),
+            ),
+          if (planned.alternatives.isNotEmpty)
+            _Section(
+              title: 'Se è occupato',
+              child: Text(planned.alternatives.join(' · '), style: textTheme.bodyLarge),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Cosa dice la scheda: serie, ripetizioni, recupero e note.
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({required this.planned});
+
+  final PlannedExercise planned;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final secondary = Theme.of(context).colorScheme.onSurfaceVariant;
+    final sets = planned.sets;
+    final rest = planned.restSeconds;
+    final notes = planned.notes;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              sets == null ? planned.reps : '$sets serie × ${planned.reps}',
+              style: textTheme.titleMedium,
+            ),
+            if (rest != null)
+              Text('Recupero ${formatRest(rest)}', style: textTheme.bodyMedium?.copyWith(color: secondary)),
+            if (notes != null) ...[
+              const SizedBox(height: 4),
+              Text(notes, style: textTheme.bodySmall?.copyWith(color: secondary)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Il tuo peso per questo esercizio, con − / + e tocco per scriverlo.
+class _WeightCard extends StatelessWidget {
+  const _WeightCard({required this.exercise});
+
+  final Exercise exercise;
+
+  static const _step = 1.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = WeightScope.of(context);
+    final weight = store.weightFor(exercise.id);
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+        child: Row(
+          children: [
+            Expanded(
+              // InkWell rende toccabile qualsiasi widget (con l'effetto onda).
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => _editWeight(context, store, weight),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Il tuo peso', style: textTheme.bodyMedium),
+                    Text(
+                      weight == null ? '—' : formatWeight(weight),
+                      style: textTheme.headlineSmall,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            IconButton.filledTonal(
+              tooltip: 'Diminuisci',
+              icon: const Icon(Icons.remove),
+              // onPressed: null disattiva il pulsante.
+              onPressed: weight == null ? null : () => store.setWeight(exercise.id, weight - _step),
+            ),
+            const SizedBox(width: 8),
+            IconButton.filledTonal(
+              tooltip: 'Aumenta',
+              icon: const Icon(Icons.add),
+              onPressed: () => store.setWeight(exercise.id, (weight ?? 0) + _step),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _editWeight(BuildContext context, WeightStore store, double? current) async {
+    // showDialog restituisce un Future: si completa quando il dialog
+    // viene chiuso, con il valore passato a Navigator.pop (o null).
+    final result = await showDialog<double>(
+      context: context,
+      builder: (context) => _WeightDialog(initial: current),
+    );
+    if (result != null) await store.setWeight(exercise.id, result);
+  }
+}
+
+/// Il dialog per scrivere il peso a mano.
+///
+/// È Stateful perché possiede un TextEditingController, che va creato
+/// una volta sola e "smaltito" (dispose) quando il dialog si chiude.
+class _WeightDialog extends StatefulWidget {
+  const _WeightDialog({required this.initial});
+
+  final double? initial;
+
+  @override
+  State<_WeightDialog> createState() => _WeightDialogState();
+}
+
+class _WeightDialogState extends State<_WeightDialog> {
+  late final _controller = TextEditingController(
+    text: widget.initial == null ? '' : formatNumber(widget.initial!),
+  );
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final text = _controller.text.trim();
+    if (text.isEmpty) {
+      Navigator.of(context).pop(0.0); // vuoto = cancella il peso
+      return;
+    }
+    final value = parseNumber(text);
+    if (value == null || value < 0) {
+      setState(() => _error = 'Scrivi un numero, ad esempio 22,5');
+      return;
+    }
+    Navigator.of(context).pop(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Il tuo peso'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(suffixText: 'kg', errorText: _error),
+        onChanged: (_) {
+          if (_error != null) setState(() => _error = null);
+        },
+        onSubmitted: (_) => _save(),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Annulla')),
+        FilledButton(onPressed: _save, child: const Text('Salva')),
+      ],
+    );
+  }
+}
+
+/// Una sezione con titolo piccolo sopra, come nelle liste di iOS.
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 6),
+          child,
+        ],
+      ),
+    );
+  }
+}
