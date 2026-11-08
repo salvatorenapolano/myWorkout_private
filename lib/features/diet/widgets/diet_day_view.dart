@@ -20,10 +20,7 @@ class DietDayView extends StatelessWidget {
         Row(
           children: [
             Expanded(child: Text(day.name, style: theme.textTheme.headlineSmall)),
-            Chip(
-              avatar: Icon(day.training ? Icons.fitness_center : Icons.self_improvement, size: 18),
-              label: Text(day.training ? 'Palestra' : 'Riposo'),
-            ),
+            _DayTypeChip(training: day.training),
           ],
         ),
         const SizedBox(height: 12),
@@ -34,20 +31,45 @@ class DietDayView extends StatelessWidget {
           ),
         // Il riquadro dei legumi compare solo nei giorni che li usano.
         if (day.usesFood('legumi')) _LegumesCard(info: diet.legumes),
-        _InfoCard(
-          title: 'Da sapere',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final note in diet.notes)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Text('• $note', style: theme.textTheme.bodyMedium),
-                ),
-            ],
-          ),
-        ),
+        // Il riquadro "Da sapere" è stato tolto: le note (diet.notes)
+        // restano nel JSON, pronte se un giorno vorrai rimetterle.
       ],
+    );
+  }
+}
+
+/// Il chip in alto a destra: giallo nei giorni di palestra, bianco a riposo.
+class _DayTypeChip extends StatelessWidget {
+  const _DayTypeChip({required this.training});
+
+  final bool training;
+
+  // Giallo pieno e testo marrone scuro: si legge bene sia in chiaro
+  // sia in scuro, quindi basta una sola coppia di colori.
+  static const _yellow = Color(0xFFFFD25E);
+  static const _onYellow = Color(0xFF4A3200);
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+
+    if (training) {
+      return Chip(
+        avatar: const Icon(Icons.fitness_center, size: 18, color: _onYellow),
+        label: const Text('Palestra', style: TextStyle(color: _onYellow)),
+        backgroundColor: _yellow,
+        // BorderSide.none: niente bordo, il giallo basta a delimitarlo.
+        side: BorderSide.none,
+      );
+    }
+    return Chip(
+      avatar: const Icon(Icons.self_improvement, size: 18),
+      label: const Text('Riposo'),
+      // In chiaro bianco; in scuro lasciamo il colore del tema, perché
+      // un chip bianco su sfondo scuro abbaglierebbe.
+      backgroundColor: dark ? null : Colors.white,
+      // Il bordo sottile stacca il bianco dallo sfondo della pagina.
+      side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
     );
   }
 }
@@ -69,7 +91,18 @@ class _LegumesCard extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: [for (final option in info.options) Chip(label: Text(option))],
+            children: [
+              for (final option in info.options)
+                Chip(
+                  label: Text(option),
+                  // Chip "bianchi" (colore delle card) sul fondo grigio del
+                  // riquadro: così si staccano bene.
+                  backgroundColor: Theme.of(context).cardTheme.color,
+                  // shrinkWrap: niente spazio extra per il tocco, questi chip
+                  // non si premono; così le righe stanno più vicine.
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+            ],
           ),
         ],
       ),
@@ -94,11 +127,11 @@ class _InfoCard extends StatelessWidget {
       elevation: 0,
       color: theme.colorScheme.surfaceContainerHighest,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: theme.textTheme.titleSmall),
+            Text(title, style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             child,
           ],

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_workout/data/workout_repository.dart';
 import 'package:my_workout/features/workout/widgets/exercise_block_tile.dart';
 import 'package:my_workout/features/workout/widgets/planned_exercise_tile.dart';
+import 'package:my_workout/features/workout/widgets/step_number.dart';
 import 'package:my_workout/features/workout/widgets/today_banner.dart';
 
 /// Tab "Allenamento": cosa tocca oggi, scelta A/B e i 4 blocchi della seduta.
@@ -62,78 +63,95 @@ class _WorkoutPageState extends State<WorkoutPage> {
     );
 
     return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
       children: [
         TodayBanner(plan: plan, now: now),
+        const SizedBox(height: 16),
 
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SegmentedButton<String>(
-            // Niente spunta sul segmento scelto: al suo posto mostriamo
-            // l'icona del calendario sulla scheda di turno.
-            showSelectedIcon: false,
-            segments: [
-              for (final w in plan.workouts)
-                ButtonSegment(
-                  value: w.id,
-                  label: Text(w.name),
-                  icon: w.id == next?.workoutId ? const Icon(Icons.today) : null,
-                ),
-            ],
-            selected: {workout.id},
-            onSelectionChanged: (selection) {
-              setState(() => _selectedWorkoutId = selection.first);
-            },
-          ),
+        SegmentedButton<String>(
+          // Niente spunta sul segmento scelto: al suo posto mostriamo
+          // l'icona del calendario sulla scheda di turno.
+          showSelectedIcon: false,
+          // expandedInsets: il selettore si allarga a tutta la larghezza
+          // disponibile (qui con zero margini extra).
+          expandedInsets: EdgeInsets.zero,
+          segments: [
+            for (final w in plan.workouts)
+              ButtonSegment(
+                value: w.id,
+                label: Text(w.name),
+                icon: w.id == next?.workoutId ? const Icon(Icons.today) : null,
+              ),
+          ],
+          selected: {workout.id},
+          onSelectionChanged: (selection) {
+            setState(() => _selectedWorkoutId = selection.first);
+          },
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 24),
 
         // 1 · Riscaldamento
         ExerciseBlockTile(number: 1, block: plan.warmup, data: data),
+        const SizedBox(height: 24),
 
         // 2 · Pesi: sempre visibile, è la parte principale.
-        _SectionTitle('2 · Pesi · ${workout.name}'),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Text(
-            plan.generalNotes,
-            style: Theme.of(context).textTheme.bodySmall,
+        // Il titolo sta fuori dalla card, le righe dentro.
+        _SectionTitle(number: 2, text: 'Pesi · ${workout.name}'),
+        const SizedBox(height: 8),
+        Card(
+          child: Column(
+            // withDividers mette una linea sottile tra una riga e l'altra.
+            children: withDividers([
+              // .indexed dà coppie (posizione, esercizio): la posizione parte da 0.
+              for (final (index, planned) in workout.exercises.indexed)
+                PlannedExerciseTile(
+                  number: index + 1,
+                  planned: planned,
+                  exercise: data.exerciseFor(planned),
+                  sectionTitle: workout.name,
+                ),
+            ]),
           ),
         ),
-        // .indexed dà coppie (posizione, esercizio): la posizione parte da 0.
-        for (final (index, planned) in workout.exercises.indexed)
-          PlannedExerciseTile(
-            number: index + 1,
-            planned: planned,
-            exercise: data.exerciseFor(planned),
-            sectionTitle: workout.name,
-          ),
+        const SizedBox(height: 24),
 
         // 3 · Addominali
         ExerciseBlockTile(number: 3, block: plan.abs, data: data),
+        const SizedBox(height: 12),
 
-        // 4 · Cardio
-        ListTile(
-          leading: const Icon(Icons.directions_walk),
-          title: Text('4 · ${plan.cardio.title}'),
-          subtitle: Text('${plan.cardio.durationMinutes} min · ${plan.cardio.description}'),
+        // 4 · Cardio: "30 min - Pendenza: 10% - Velocità 5,5km/h"
+        Card(
+          child: ListTile(
+            leading: const StepNumber(4),
+            title: Text(plan.cardio.title, style: Theme.of(context).textTheme.titleLarge),
+            subtitle: Text('${plan.cardio.durationMinutes} min - ${plan.cardio.description}'),
+            trailing: const Icon(Icons.directions_walk),
+          ),
         ),
       ],
     );
   }
 }
 
-/// Titolo di sezione. È privato (inizia con _) perché serve solo qui.
+/// Titolo di sezione col numero della parte di seduta, allineato
+/// ai numeri che stanno dentro le card (stesso rientro del ListTile).
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
+  const _SectionTitle({required this.number, required this.text});
 
+  final int number;
   final String text;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          StepNumber(number),
+          const SizedBox(width: 16),
+          Text(text, style: Theme.of(context).textTheme.titleLarge),
+        ],
+      ),
     );
   }
 }

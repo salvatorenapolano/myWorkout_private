@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
+import 'package:my_workout/app_theme.dart';
 import 'package:my_workout/features/workout/widgets/exercise_preview.dart';
 import 'package:my_workout/models/exercise.dart';
 
@@ -66,7 +67,7 @@ class _ExerciseVideoState extends State<ExerciseVideo> {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppTheme.radiusCard),
       child: YoutubePlayer(controller: _controller, aspectRatio: 16 / 9),
     );
   }

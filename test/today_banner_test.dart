@@ -27,7 +27,7 @@ void main() {
   testWidgets('giorno di riposo: dice quando è il prossimo', (tester) async {
     await pumpBanner(tester, DateTime(2026, 11, 8)); // domenica
     expect(find.text('Oggi riposo'), findsOneWidget);
-    expect(find.textContaining('domani alle 15:00: Scheda B'), findsOneWidget);
+    expect(find.textContaining('domani: Scheda B'), findsOneWidget);
   });
 
   testWidgets('dopo il 27/11 la scheda è terminata', (tester) async {

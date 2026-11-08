@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:my_workout/app_theme.dart';
 import 'package:my_workout/models/diet.dart';
 
-/// Un pasto: "PRANZO · 13:00", il titolo e gli ingredienti con le grammature.
+/// Un pasto: "☀️ Pranzo · 13:00", il titolo e gli ingredienti con le grammature.
 class MealCard extends StatelessWidget {
   const MealCard({super.key, required this.diet, required this.meal});
 
@@ -18,28 +19,46 @@ class MealCard extends StatelessWidget {
     final slot = diet.slotFor(meal);
     final tint = _SlotTint.of(context, slot.id);
     final emoji = slot.emoji;
+    // Il colore dell'etichetta, usato anche per divisore e pallini.
+    final accent = tint?.accent ?? colors.primary;
 
     return Card(
       margin: EdgeInsets.zero,
       // Sfondo tenue: giallo a pranzo, blu a cena.
       color: tint?.background,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              // `?emoji`: mette l'emoji nella lista solo se non è null.
-              [?emoji, slot.label.toUpperCase()].join('  '),
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: tint?.accent ?? colors.primary,
-                fontWeight: FontWeight.bold,
+            // Intestazione centrata: Center mette il figlio al centro dello
+            // spazio orizzontale, anche se la Column esterna allinea a sinistra.
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    // `?emoji`: mette l'emoji nella lista solo se non è null.
+                    [?emoji, slot.label].join('  '),
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: accent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  // textAlign serve se il titolo va a capo su più righe.
+                  Text(
+                    meal.title,
+                    style: theme.textTheme.titleLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 2),
-            Text(meal.title, style: theme.textTheme.titleMedium),
-            if (meal.items.isNotEmpty) const SizedBox(height: 8),
-            for (final item in meal.items) _ItemRow(food: diet.foodFor(item), item: item),
+            // Divider: una linea sottile orizzontale. `height` è lo spazio
+            // verticale totale che occupa (la linea sta nel mezzo).
+            Divider(height: 20, color: accent.withValues(alpha: 0.3)),
+            for (final item in meal.items)
+              _ItemRow(food: diet.foodFor(item), item: item, bulletColor: accent),
             if (description != null) ...[
               const SizedBox(height: 6),
               Text(description, style: theme.textTheme.bodyMedium),
@@ -56,7 +75,7 @@ class MealCard extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: colors.secondaryContainer,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusInner),
                 ),
                 child: Text(
                   alternative,
@@ -93,12 +112,15 @@ class _SlotTint {
   }
 }
 
-/// "Tonno al naturale (sgocciolato) ........ 80 g"
+/// "• Tonno al naturale (sgocciolato) ........ 80 g"
 class _ItemRow extends StatelessWidget {
-  const _ItemRow({required this.food, required this.item});
+  const _ItemRow({required this.food, required this.item, required this.bulletColor});
 
   final Food food;
   final MealItem item;
+
+  /// Il colore del pallino dell'elenco (giallo scuro a pranzo, blu a cena).
+  final Color bulletColor;
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +134,9 @@ class _ItemRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Il pallino: stesso stile del testo, così resta allineato
+          // alla prima riga anche quando il nome va a capo.
+          Text('•  ', style: theme.textTheme.bodyLarge?.copyWith(color: bulletColor)),
           Expanded(
             // Text.rich: un solo testo con pezzi in stili diversi.
             child: Text.rich(

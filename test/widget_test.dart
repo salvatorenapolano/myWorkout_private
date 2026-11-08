@@ -43,7 +43,7 @@ void main() {
     // Apro il dettaglio del goblet squat.
     await tester.tap(find.text('Goblet squat'));
     await tester.pumpAndSettle();
-    expect(find.text('Come si esegue'.toUpperCase()), findsOneWidget);
+    expect(find.text('Il tuo peso'), findsOneWidget);
     expect(find.text('16 kg'), findsOneWidget);
 
     // + aumenta di 1 kg.
@@ -58,6 +58,20 @@ void main() {
     await tester.tap(find.text('Salva'));
     await tester.pumpAndSettle();
     expect(find.text('22,5 kg'), findsOneWidget);
+
+    // La card Muscoli: toccandola si apre lo schermo intero con lo zoom.
+    // ensureVisible scorre la pagina finché la card è sullo schermo.
+    await tester.ensureVisible(find.text('Tocca per ingrandire'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tocca per ingrandire'));
+    await tester.pumpAndSettle();
+    expect(find.byType(InteractiveViewer), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    // La pagina è lunga: scorro finché compare la spiegazione.
+    await tester.scrollUntilVisible(find.text('Come si esegue'), 200);
+    expect(find.text('Come si esegue'), findsOneWidget);
 
     // Torno indietro: la riga nella lista mostra il nuovo peso.
     await tester.pageBack();

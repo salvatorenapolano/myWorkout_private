@@ -16,6 +16,7 @@ class Exercise {
     required this.tips,
     required this.images,
     this.videoUrl,
+    this.muscleImage,
   });
 
   /// Crea un Exercise dalla mappa che restituisce jsonDecode().
@@ -33,6 +34,7 @@ class Exercise {
       images: List<String>.from(json['images'] as List? ?? const []),
       // `String?` (col punto di domanda) accetta anche null.
       videoUrl: json['videoUrl'] as String?,
+      muscleImage: json['muscleImage'] as String?,
     );
   }
 
@@ -45,9 +47,20 @@ class Exercise {
   final List<String> images;
   final String? videoUrl;
 
+  /// Il nome dell'illustrazione dei muscoli ("petto", "dorsali"...),
+  /// null se l'esercizio non ne ha una.
+  final String? muscleImage;
+
   /// L'anteprima SVG: il file ha lo stesso nome dell'id.
   /// Le genera tool/generate_exercise_previews.py.
   String get previewAsset => 'assets/images/exercises/$id.svg';
+
+  /// Il file dell'illustrazione dei muscoli, o null se non c'è.
+  /// Le immagini stanno in `assets/images/muscles/<nome>.webp`.
+  String? get muscleAsset {
+    final name = muscleImage;
+    return name == null ? null : 'assets/images/muscles/$name.webp';
+  }
 
   /// Solo gli esercizi coi pesi hanno un peso da ricordare.
   bool get hasWeight => category == ExerciseCategory.weights;

@@ -66,8 +66,8 @@
   },
 
   "cardio": {
-    "title": "Camminata in salita",
+    "title": "Tapis Roulant",
     "durationMinutes": 30,
-    "description": "Tapis roulant, pendenza 10%, 5,5 km/h."
+    "description": "Pendenza: 10% - Velocità 5,5km/h"
   }
 }

@@ -22,7 +22,7 @@ void main() {
     expect(verdure.amountLabel, '250–300 g');
     final passata = monday.meals[0].items.firstWhere((i) => i.foodId == 'passata');
     expect(passata.amountLabel, isNull);
-    expect(diet.slotFor(dinner).label, 'Cena · 19:30–20:00');
+    expect(diet.slotFor(dinner).label, 'Cena · 20:00');
     expect(diet.slotFor(dinner).emoji, '🌙');
     expect(diet.slotFor(monday.meals[0]).emoji, '☀️');
   });

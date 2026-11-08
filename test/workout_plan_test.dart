@@ -110,4 +110,14 @@ void main() {
         .toList();
     expect(missing, isEmpty, reason: 'Rilancia tool/generate_exercise_previews.py');
   });
+
+  test('le illustrazioni dei muscoli esistono, solo sugli esercizi coi pesi', () {
+    final withImage = data.exercises.values.where((e) => e.muscleAsset != null).toList();
+    // Tutti e 14 gli esercizi coi pesi hanno la loro illustrazione.
+    expect(withImage, hasLength(14));
+    for (final e in withImage) {
+      expect(File(e.muscleAsset!).existsSync(), isTrue, reason: e.muscleAsset);
+      expect(e.hasWeight, isTrue, reason: e.id);
+    }
+  });
 }

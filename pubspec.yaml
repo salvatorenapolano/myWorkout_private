@@ -48,6 +48,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -65,6 +66,23 @@ flutter:
   assets:
     - assets/data/
     - assets/images/exercises/
+    - assets/images/muscles/
+
+  # Font inclusi nell'app (funzionano anche offline).
+  # "family" è il nome che useremo nel codice (fontFamily: 'Barlow');
+  # ogni file è uno spessore diverso, indicato con "weight" (400 = normale,
+  # 700 = grassetto). Licenza libera OFL: vedi assets/fonts/OFL.txt.
+  fonts:
+    - family: Barlow
+      fonts:
+        - asset: assets/fonts/BarlowSemiCondensed-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/BarlowSemiCondensed-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/BarlowSemiCondensed-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/BarlowSemiCondensed-Bold.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

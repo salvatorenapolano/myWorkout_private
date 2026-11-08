@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:my_workout/app_theme.dart';
 import 'package:my_workout/data/weight_store.dart';
 import 'package:my_workout/features/workout/widgets/exercise_media.dart';
+import 'package:my_workout/features/workout/widgets/muscle_card.dart';
 import 'package:my_workout/models/exercise.dart';
 import 'package:my_workout/models/workout_plan.dart';
 import 'package:my_workout/utils/formatters.dart';
@@ -23,6 +25,9 @@ class ExerciseDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    // In una variabile locale: Dart così "sa" che dopo il controllo
+    // `!= null` è una String vera (promozione di tipo).
+    final muscleAsset = exercise.muscleAsset;
 
     return Scaffold(
       // La freccia indietro la aggiunge l'AppBar da sola, perché sa
@@ -34,8 +39,10 @@ class ExerciseDetailPage extends StatelessWidget {
           // Video YouTube se c'è, altrimenti l'anteprima SVG.
           ExerciseMedia(exercise: exercise),
           const SizedBox(height: 16),
-          Text(exercise.name, style: textTheme.headlineSmall),
-          if (exercise.muscles.isNotEmpty) ...[
+          Text(exercise.name, style: textTheme.headlineMedium),
+          // I chip sotto il nome solo se manca l'illustrazione:
+          // altrimenti i muscoli sono già nella card "Muscoli" più in basso.
+          if (exercise.muscles.isNotEmpty && muscleAsset == null) ...[
             const SizedBox(height: 8),
             // Wrap: come una Row, ma va a capo se non c'è spazio.
             Wrap(
@@ -49,6 +56,12 @@ class ExerciseDetailPage extends StatelessWidget {
           if (exercise.hasWeight) ...[
             const SizedBox(height: 12),
             _WeightCard(exercise: exercise),
+          ],
+          // Dopo il peso (quello che usi di più in palestra), prima della
+          // spiegazione: i muscoli aiutano a capire l'esercizio.
+          if (muscleAsset != null) ...[
+            const SizedBox(height: 12),
+            MuscleCard(exercise: exercise, asset: muscleAsset),
           ],
           _Section(
             title: 'Come si esegue',
@@ -96,13 +109,14 @@ class _PlanCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Il dato principale grande, nel font da tabellone.
             Text(
               sets == null ? planned.reps : '$sets serie × ${planned.reps}',
-              style: textTheme.titleMedium,
+              style: textTheme.headlineSmall,
             ),
             if (rest != null)
               Text('Recupero ${formatRest(rest)}', style: textTheme.bodyMedium?.copyWith(color: secondary)),
@@ -130,25 +144,34 @@ class _WeightCard extends StatelessWidget {
     final store = WeightScope.of(context);
     final weight = store.weightFor(exercise.id);
     final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
 
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+        padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
         child: Row(
           children: [
             Expanded(
               // InkWell rende toccabile qualsiasi widget (con l'effetto onda).
               child: InkWell(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTheme.radiusInner),
                 onTap: () => _editWeight(context, store, weight),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Il tuo peso', style: textTheme.bodyMedium),
+                    Text(
+                      'Il tuo peso',
+                      style: textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+                    ),
+                    // Il numero è il protagonista della card.
                     Text(
                       weight == null ? '—' : formatWeight(weight),
-                      style: textTheme.headlineSmall,
+                      style: textTheme.displaySmall?.copyWith(
+                        color: colors.primary,
+                        // Cifre a larghezza fissa: premendo + il testo non "balla".
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
                   ],
                 ),
@@ -161,7 +184,8 @@ class _WeightCard extends StatelessWidget {
               onPressed: weight == null ? null : () => store.setWeight(exercise.id, weight - _step),
             ),
             const SizedBox(width: 8),
-            IconButton.filledTonal(
+            // IconButton.filled: pieno col colore primario, è l'azione più usata.
+            IconButton.filled(
               tooltip: 'Aumenta',
               icon: const Icon(Icons.add),
               onPressed: () => store.setWeight(exercise.id, (weight ?? 0) + _step),
@@ -244,7 +268,7 @@ class _WeightDialogState extends State<_WeightDialog> {
   }
 }
 
-/// Una sezione con titolo piccolo sopra, come nelle liste di iOS.
+/// Una sezione con un titolo sopra ("Come si esegue", "Consigli"...).
 class _Section extends StatelessWidget {
   const _Section({required this.title, required this.child});
 
@@ -255,15 +279,13 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.only(top: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title.toUpperCase(),
-            style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 6),
+          // Maiuscole normali: il font da tabellone basta a farlo spiccare.
+          Text(title, style: theme.textTheme.titleLarge),
+          const SizedBox(height: 8),
           child,
         ],
       ),

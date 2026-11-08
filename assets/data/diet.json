@@ -4,7 +4,7 @@
 
   "slots": [
     { "id": "pranzo", "name": "Pranzo", "time": "13:00", "emoji": "☀️" },
-    { "id": "cena", "name": "Cena", "time": "19:30–20:00", "emoji": "🌙" },
+    { "id": "cena", "name": "Cena", "time": "20:00", "emoji": "🌙" },
     { "id": "giornata", "name": "Pranzo e cena", "emoji": "☀️🌙" }
   ],
 

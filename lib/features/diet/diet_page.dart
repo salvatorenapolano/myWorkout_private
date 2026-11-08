@@ -55,6 +55,11 @@ class _DietPageState extends State<DietPage> {
           bottom: TabBar(
             tabs: [for (final day in diet.days) Tab(text: day.shortName)],
             labelPadding: EdgeInsets.zero,
+            // padding: spazio attorno a tutta la fila di schede.
+            // indicatorPadding: rimpicciolisce la "pillola" del giorno scelto
+            // rispetto alla sua scheda, così non tocca le vicine.
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            indicatorPadding: const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
           ),
         ),
         body: TabBarView(

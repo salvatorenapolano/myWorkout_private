@@ -1,0 +1,16 @@
+# Configurazione dell'icona dell'app.
+# Per rigenerarla:  python tool/generate_app_icon.py
+#                   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+
+  # iPhone: l'App Store non accetta icone con trasparenza.
+  ios: true
+  remove_alpha_ios: true
+
+  # Android: icona "classica" + icona adattiva (sfondo e primo piano
+  # separati, che il telefono ritaglia nella forma che preferisce).
+  android: true
+  min_sdk_android: 21
+  adaptive_icon_background: "assets/icon/app_icon_background.png"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"

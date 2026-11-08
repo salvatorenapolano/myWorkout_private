@@ -47,19 +47,30 @@ class PlannedExerciseTile extends StatelessWidget {
     final weight = exercise.hasWeight ? WeightScope.of(context).weightFor(exercise.id) : null;
 
     final number = this.number;
+    final theme = Theme.of(context);
 
     return ListTile(
       leading: number == null
           ? ExercisePreview(exercise: exercise)
           : _NumberedPreview(number: number, exercise: exercise),
-      title: Text(exercise.name),
+      // Il nome nel font da tabellone, i dettagli nel font di sistema.
+      title: Text(exercise.name, style: theme.textTheme.titleMedium),
       subtitle: Text(notes == null ? _details : '$_details\n$notes'),
       trailing: Row(
         // min: la Row occupa solo lo spazio che le serve.
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (weight != null) Text(formatWeight(weight)),
-          const Icon(Icons.chevron_right),
+          if (weight != null)
+            Text(
+              formatWeight(weight),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                // Cifre tutte larghe uguali: "18 kg" e "22 kg" occupano
+                // lo stesso spazio e la colonna dei pesi resta in fila.
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
         ],
       ),
       onTap: () {
@@ -77,6 +88,19 @@ class PlannedExerciseTile extends StatelessWidget {
       },
     );
   }
+}
+
+/// Mette un Divider (linea sottile) tra una riga e l'altra.
+///
+/// È una funzione "libera", fuori da ogni classe: in Dart si può.
+/// Il rientro (indent) fa partire la linea dopo l'anteprima, come su iOS.
+List<Widget> withDividers(List<Widget> rows) {
+  return [
+    for (final (index, row) in rows.indexed) ...[
+      if (index > 0) const Divider(indent: 80),
+      row,
+    ],
+  ];
 }
 
 /// L'anteprima con un cerchietto numerato sull'angolo in alto a sinistra.
@@ -107,8 +131,8 @@ class _NumberedPreview extends StatelessWidget {
             decoration: BoxDecoration(
               color: colors.primary,
               shape: BoxShape.circle,
-              // Il bordo del colore dello sfondo "stacca" il cerchio dall'immagine.
-              border: Border.all(color: colors.surface, width: 2),
+              // Il bordo del colore della card "stacca" il cerchio dall'immagine.
+              border: Border.all(color: Theme.of(context).cardTheme.color ?? colors.surface, width: 2),
             ),
             child: Text(
               '$number',
