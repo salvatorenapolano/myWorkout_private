@@ -1,4 +1,4 @@
-"""Genera l'icona dell'app: l'emoji 💪 (Noto Emoji, Apache 2.0) su gradiente giallo.
+"""Genera l'icona dell'app: l'emoji 💪 (Noto Emoji, Apache 2.0) su gradiente petrolio.
 
 Uso:  python tool/generate_app_icon.py
 Poi:  dart run flutter_launcher_icons   (crea tutte le misure iOS e Android)
@@ -16,10 +16,11 @@ SIZE = 1024
 ICON_DIR = Path(__file__).resolve().parent.parent / "assets" / "icon"
 EMOJI = ICON_DIR / "noto_emoji_u1f4aa.png"
 
-# Gradiente diagonale: giallo chiaro in alto a sinistra, giallo caldo in basso a destra.
-TOP_LEFT = (255, 247, 204)      # #FFF7CC
-BOTTOM_RIGHT = (255, 214, 92)   # #FFD65C
-SHADOW = (150, 90, 0)           # ombra ambra scura
+# Gradiente diagonale attorno al colore principale dell'app (#0E7C86,
+# AppTheme.seedColor): più chiaro in alto a sinistra, più scuro in basso a destra.
+TOP_LEFT = (24, 160, 170)       # #18A0AA
+BOTTOM_RIGHT = (8, 84, 92)      # #08545C
+SHADOW = (0, 30, 34)            # ombra petrolio scurissimo
 
 
 def gradient() -> Image.Image:

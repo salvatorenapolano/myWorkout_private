@@ -21,7 +21,10 @@ void main() {
         plan.abs.exercises.map((p) => p.exerciseId),
         ['plank', 'plank_laterale', 'leg_raise', 'heel_touch'],
       );
+      expect(plan.cardio.title, 'Cardio');
       expect(plan.cardio.durationMinutes, 30);
+      expect(plan.cardio.inclinePercent, 10);
+      expect(plan.cardio.speedKmh, 5.5);
       // Il plank sta solo negli addominali, non più tra i pesi della Scheda A.
       expect(plan.workoutById('A').exercises.map((p) => p.exerciseId), isNot(contains('plank')));
       expect(data.exerciseFor(plan.workoutById('A').exercises.first).name, 'Leg press');

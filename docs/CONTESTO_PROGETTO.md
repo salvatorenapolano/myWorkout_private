@@ -1,6 +1,6 @@
 # myWorkout — contesto del progetto
 
-App Flutter personale per iPhone: la mia scheda di allenamento, la dieta settimanale e (in futuro) la lista della spesa.
+App Flutter personale per iPhone: la mia scheda di allenamento, la dieta settimanale, la pesata del venerdì e la lista della spesa.
 È anche un progetto **per imparare Flutter**: procediamo step by step.
 
 ## Come lavoriamo
@@ -16,7 +16,8 @@ App Flutter personale per iPhone: la mia scheda di allenamento, la dieta settima
 |---|---|
 | **Allenamento** | ✅ Fatto: scheda del giorno, A/B, dettaglio esercizio con video e pesi salvati |
 | **Dieta** | ✅ Fatto: settimana tipo, pranzo e cena |
-| **Spesa** | ⏳ Da fare (per ora segnaposto) |
+| **Pesata** | ✅ Fatto: promemoria del venerdì, storico pesate con differenze |
+| **Spesa** | ✅ Fatto: liste Settimanale / Mensile con spunte e Reset |
 
 ## Stack
 
@@ -43,13 +44,15 @@ lib/
     ├── workout/              # workout_page, exercise_detail_page, widgets/ (today_banner,
     │                         #   planned_exercise_tile, exercise_block_tile, exercise_media, exercise_preview, step_number)
     ├── diet/                 # diet_page (TabBar Lun…Dom), widgets/ (diet_day_view, meal_card)
-    └── shopping/             # shopping_page (segnaposto)
+    ├── weigh_in/             # weigh_in_page (storico, +), widgets/weigh_in_banner
+    └── shopping/             # shopping_page (schede Settimanale/Mensile, checkbox, Reset)
+lib/widgets/                  # condivisi: status_banner (riquadro in cima), weight_input_dialog, dividers
 assets/data/                  # exercises.json, workout_plan.json, diet.json
 assets/images/exercises/      # <id>.svg, una anteprima per esercizio
 assets/images/muscles/        # illustrazioni muscoli (.webp scontornati, sfondo trasparente), scelte con "muscleImage"
 tool/generate_exercise_previews.py   # genera tutti gli SVG (pose + colori)
 tool/prepare_muscle_images.py        # ritaglia e scontorna le illustrazioni dei muscoli (python … <cartella_originali>)
-tool/generate_app_icon.py            # icona: 💪 Noto (Apache 2.0) su gradiente giallo → assets/icon/
+tool/generate_app_icon.py            # icona: 💪 Noto (Apache 2.0) su gradiente petrolio → assets/icon/
 flutter_launcher_icons.yaml          # poi `dart run flutter_launcher_icons` crea tutte le misure iOS/Android
 test/                         # test su JSON, calendario, banner, pesi, widget
 codemagic.yaml                # build iOS nel cloud
@@ -67,19 +70,25 @@ Ogni esercizio: `id`, `name`, `category` (`warmup` | `weights` | `abs`), `muscle
 ### `workout_plan.json` — la scheda (il "quanto")
 Fase 1 · Rimettersi in forma, v2 del personal trainer.
 - `schedule`: lunedì, mercoledì, venerdì alle 15:00, rotazione **A, B, A, B…** dal **19/10/2026** al **27/11/2026** (18 sedute). Il calendario si calcola, non è scritto riga per riga.
-- Seduta = **1 Riscaldamento** (10 min, 8 esercizi) → **2 Pesi** (Scheda A: 7 esercizi, Scheda B: 8) → **3 Addominali** (plank 3×30" +5"/settimana, plank laterale 20" per lato, leg raise 10–12, heel touch 12 per lato) → **4 Tapis Roulant** ("30 min - Pendenza: 10% - Velocità 5,5km/h").
+- Seduta = **1 Riscaldamento** (10 min, 8 esercizi) → **2 Pesi** (Scheda A: 7 esercizi, Scheda B: 8) → **3 Addominali** (plank 3×30" +5"/settimana, plank laterale 20" per lato, leg raise 10–12, heel touch 12 per lato) → **4 Cardio** sul tapis roulant (`durationMinutes` 30, `inclinePercent` 10, `speedKmh` 5,5; in app: "⏱️ 30 min  ⛰️ 10%  💨 5,5 km/h").
 - Ogni esercizio in scheda: `exerciseId`, `sets?`, `reps` (testo: "10–12", "30\"", "12 per lato"), `restSeconds?`, `notes?`, `alternatives[]` ("se è occupato").
 - Nota generale: finire ogni serie con 2–3 ripetizioni "nel serbatoio".
 
 ### `diet.json` — la settimana tipo
-- Catalogo `foods` (id, nome, **reparto**: Frutta e verdura, Carne e pesce, Frigo, Pane, Dispensa) → servirà per la spesa.
+- Catalogo `foods` (id, nome, **reparto**: Frutta e verdura, Carne e pesce, Frigo, Pane, Dispensa). La spesa NON è calcolata da qui: ha il suo `shopping.json`.
 - `days`: 7 giorni, `training` true lun/mer/ven, ognuno con pasti `pranzo` (13:00) e `cena` (19:30–20:00). Domenica un unico slot "Pranzo e cena" libero con 3 regole.
 - Ingredienti: `foodId`, `quantity?`, `quantityMax?` (intervalli 250–300 g), `unit`, `note`.
 - Extra: riquadro "legumi a scelta" (solo mar/gio), note "Da sapere".
+- `alternative` di un pasto = riquadro "se manca": martedì cena "Se manca il salmone…", lunedì cena "Se mancano le patate: 250–300 g di verdure." (le verdure non sono tra gli ingredienti). Mercoledì cena senza insalata (l'alimento resta nel catalogo, per ora non usato).
 - Colazione e spuntini **mancano** (sono in un altro PDF, "La mia giornata", non ancora fornito).
 
-### Dati dell'utente
-Pesi per esercizio in `shared_preferences`, chiave `weight_<exerciseId>`, in kg (anche decimali). Non è una checklist delle serie: è solo un promemoria del peso usato.
+### `shopping.json` — la lista della spesa
+Due liste (`Settimanale` · fresco, `Mensile` · dispensa), ognuna con sezioni e prodotti `{id, name, quantity?}`, trascritte dal PDF del nutrizionista. Gli `id` devono essere unici (il repository lo controlla) e non vanno cambiati: servono a ricordare le spunte.
+
+### Dati dell'utente (tutti in `shared_preferences`)
+- Pesi per esercizio: chiave `weight_<exerciseId>`, in kg (anche decimali). Non è una checklist delle serie: è solo un promemoria del peso usato.
+- Pesate: chiave `body_weights`, testo JSON `[{"date": "2026-11-06", "kg": 78.4}, …]`, una per giorno (`BodyWeightStore`).
+- Spunte della spesa: chiave `shopping_checked`, lista degli id spuntati (`ShoppingStore`).
 
 ## Com'è fatta l'interfaccia
 
@@ -93,6 +102,10 @@ Pesi per esercizio in `shared_preferences`, chiave `weight_<exerciseId>`, in kg 
 **Dettaglio esercizio** (tap su una riga): video YouTube al posto dell'anteprima se c'è, nome, card "in scheda" (serie, recupero, note), card **Il tuo peso** (− / + di 1 kg, tap per scriverlo), card **Muscoli** (illustrazione anatomica con muscolo in rosso + elenco; tap = schermo intero con zoom), "Come si esegue", consigli, "Se è occupato". Senza illustrazione i muscoli restano chip sotto il nome.
 
 **Dieta**: schede Lun…Dom (si apre su oggi), chip **Palestra giallo** / Riposo bianco, una card per pasto: **☀️ Pranzo (13:00) con sfondo giallo tenue, 🌙 Cena (20:00) con sfondo blu tenue**. Intestazione del pasto centrata con divisore sotto, ingredienti a pallini. Niente riquadro "Da sapere" (le note restano nel JSON).
+
+**Pesata** (tab con la bilancia): banner in cima solo col titolo, senza descrizione: "Oggi ti devi pesare" il venerdì (petrolio), "Pesata fatta: 78,4 kg", "Pesata di venerdì da fare" se l'hai saltata, altrimenti "Prossima pesata …". Storico dalla più recente: data, differenza dalla precedente (+0,4 / −0,6 / ±0), peso. **+** = pesata di oggi (se c'è già la sostituisce), tocco = correggi, trascina a sinistra = cancella (con Annulla).
+
+**Spesa**: schede Settimanale / Mensile, sezioni con contatore "3/7", prodotto con checkbox e quantità; spuntato = barrato. Tasto **Reset** sempre in basso a destra: toglie le spunte **della scheda aperta** (la mensile non si azzera col reset settimanale), con Annulla.
 
 **Anteprime esercizi**: stile "badge colorato" — omino bianco su quadrato arrotondato colorato per gruppo muscolare (gambe blu, petto rosa, schiena indaco, spalle viola, braccia arancio, core verde, riscaldamento corallo). Si rigenerano con `python tool/generate_exercise_previews.py`.
 
@@ -118,8 +131,7 @@ File "myWorkout" con wireframe iniziali (pagine Wireframe/Componenti/Design, var
 
 ## Da fare / idee
 
-1. **Lista della spesa** generata da `diet.json`: somma le quantità della settimana per alimento, raggruppa per reparto, spunte salvate sul telefono.
-2. **Colazione e spuntini** quando arriva il PDF "La mia giornata".
-3. ~~Icona dell'app~~ ✅ fatta: 💪 Noto Emoji su gradiente giallo.
-4. Possibili: timer di recupero, storico dei pesi, schede future dopo il 27/11.
-5. Le descrizioni di plank laterale, leg raise e heel touch sono state scritte da Claude, non dal PT: da verificare.
+1. **Colazione e spuntini** quando arriva il PDF "La mia giornata".
+2. ~~Icona dell'app~~ ✅ fatta: 💪 Noto Emoji su gradiente petrolio (colore principale).
+3. Possibili: timer di recupero, storico dei pesi degli esercizi, grafico delle pesate, schede future dopo il 27/11.
+4. Le descrizioni di plank laterale, leg raise e heel touch sono state scritte da Claude, non dal PT: da verificare.

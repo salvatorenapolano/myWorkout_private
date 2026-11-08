@@ -4,6 +4,7 @@ import 'package:my_workout/data/workout_repository.dart';
 import 'package:my_workout/features/workout/widgets/planned_exercise_tile.dart';
 import 'package:my_workout/features/workout/widgets/step_number.dart';
 import 'package:my_workout/models/workout_plan.dart';
+import 'package:my_workout/widgets/dividers.dart';
 
 /// Riscaldamento e addominali: una card che si apre e si chiude.
 class ExerciseBlockTile extends StatelessWidget {
@@ -44,7 +45,7 @@ class ExerciseBlockTile extends StatelessWidget {
               ),
             ),
           const Divider(),
-          ...withDividers([
+          ...withDividers(indent: 80, [
             for (final planned in block.exercises)
               PlannedExerciseTile(
                 planned: planned,

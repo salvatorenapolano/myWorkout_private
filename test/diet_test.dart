@@ -18,8 +18,15 @@ void main() {
     final monday = diet.days.first;
     expect(monday.meals.map((m) => m.title), ['Pasta al pomodoro e tonno', 'Pollo e patate']);
     final dinner = monday.meals[1];
-    final verdure = dinner.items.firstWhere((i) => i.foodId == 'verdure');
+    // Lunedì le verdure sono solo l'alternativa, se mancano le patate.
+    expect(dinner.items.any((i) => i.foodId == 'verdure'), isFalse);
+    expect(dinner.alternative, 'Se mancano le patate: 250–300 g di verdure.');
+    // Martedì a cena invece ci sono, con l'intervallo 250–300 g.
+    final tuesdayDinner = diet.days[1].meals[1];
+    final verdure = tuesdayDinner.items.firstWhere((i) => i.foodId == 'verdure');
     expect(verdure.amountLabel, '250–300 g');
+    // Mercoledì a cena niente insalata.
+    expect(diet.days[2].meals[1].items.any((i) => i.foodId == 'insalata'), isFalse);
     final passata = monday.meals[0].items.firstWhere((i) => i.foodId == 'passata');
     expect(passata.amountLabel, isNull);
     expect(diet.slotFor(dinner).label, 'Cena · 20:00');

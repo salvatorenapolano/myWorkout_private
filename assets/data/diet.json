@@ -55,9 +55,9 @@
           "items": [
             { "foodId": "petto_pollo", "quantity": 180, "unit": "g" },
             { "foodId": "patate", "quantity": 250, "unit": "g", "note": "in friggitrice" },
-            { "foodId": "verdure", "quantity": 250, "quantityMax": 300, "unit": "g" },
             { "foodId": "olio", "quantity": 15, "unit": "g" }
-          ]
+          ],
+          "alternative": "Se mancano le patate: 250–300 g di verdure."
         }
       ]
     },
@@ -109,7 +109,6 @@
           "items": [
             { "foodId": "hamburger_manzo", "quantity": 150, "unit": "g" },
             { "foodId": "patate", "quantity": 250, "unit": "g" },
-            { "foodId": "insalata" },
             { "foodId": "olio", "quantity": 15, "unit": "g" }
           ]
         }

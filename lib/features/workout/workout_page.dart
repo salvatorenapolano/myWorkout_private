@@ -5,6 +5,8 @@ import 'package:my_workout/features/workout/widgets/exercise_block_tile.dart';
 import 'package:my_workout/features/workout/widgets/planned_exercise_tile.dart';
 import 'package:my_workout/features/workout/widgets/step_number.dart';
 import 'package:my_workout/features/workout/widgets/today_banner.dart';
+import 'package:my_workout/utils/formatters.dart';
+import 'package:my_workout/widgets/dividers.dart';
 
 /// Tab "Allenamento": cosa tocca oggi, scelta A/B e i 4 blocchi della seduta.
 class WorkoutPage extends StatefulWidget {
@@ -101,7 +103,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
         Card(
           child: Column(
             // withDividers mette una linea sottile tra una riga e l'altra.
-            children: withDividers([
+            children: withDividers(indent: 80, [
               // .indexed dà coppie (posizione, esercizio): la posizione parte da 0.
               for (final (index, planned) in workout.exercises.indexed)
                 PlannedExerciseTile(
@@ -119,12 +121,21 @@ class _WorkoutPageState extends State<WorkoutPage> {
         ExerciseBlockTile(number: 3, block: plan.abs, data: data),
         const SizedBox(height: 12),
 
-        // 4 · Cardio: "30 min - Pendenza: 10% - Velocità 5,5km/h"
+        // 4 · Cardio: ⏱️ 30 min  ⛰️ 10%  💨 5,5 km/h
         Card(
           child: ListTile(
             leading: const StepNumber(4),
             title: Text(plan.cardio.title, style: Theme.of(context).textTheme.titleLarge),
-            subtitle: Text('${plan.cardio.durationMinutes} min - ${plan.cardio.description}'),
+            // Wrap: i tre dati stanno su una riga e vanno a capo
+            // da soli se lo schermo è stretto.
+            subtitle: Wrap(
+              spacing: 16,
+              children: [
+                Text('⏱️ ${plan.cardio.durationMinutes} min'),
+                Text('⛰️ ${formatNumber(plan.cardio.inclinePercent)}%'),
+                Text('💨 ${formatNumber(plan.cardio.speedKmh)} km/h'),
+              ],
+            ),
             trailing: const Icon(Icons.directions_walk),
           ),
         ),

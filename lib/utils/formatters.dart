@@ -41,3 +41,16 @@ String formatWeight(double kg) => '${formatNumber(kg)} kg';
 /// Il contrario di formatNumber: accetta sia "2,5" che "2.5".
 /// Restituisce null se il testo non è un numero.
 double? parseNumber(String text) => double.tryParse(text.trim().replaceAll(',', '.'));
+
+/// Prima lettera maiuscola: "venerdì 13 novembre" → "Venerdì 13 novembre".
+String capitalize(String text) =>
+    text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
+
+/// Differenza tra due pesate, col segno: 0.4 → "+0,4", -0.6 → "−0,6", 0 → "±0".
+/// Arrotondiamo a un decimale perché coi double 78.4 - 79.0 fa -0.6000000000000085.
+String formatWeightChange(double diff) {
+  final rounded = (diff * 10).round() / 10;
+  if (rounded == 0) return '±0';
+  // "−" è il vero segno meno tipografico, più largo del trattino "-".
+  return '${rounded > 0 ? '+' : '−'}${formatNumber(rounded.abs())}';
+}

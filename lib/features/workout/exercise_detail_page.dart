@@ -7,6 +7,7 @@ import 'package:my_workout/features/workout/widgets/muscle_card.dart';
 import 'package:my_workout/models/exercise.dart';
 import 'package:my_workout/models/workout_plan.dart';
 import 'package:my_workout/utils/formatters.dart';
+import 'package:my_workout/widgets/weight_input_dialog.dart';
 
 /// Il dettaglio di un esercizio: anteprima, cosa dice la scheda,
 /// il tuo peso, come si esegue, consigli e alternative.
@@ -201,70 +202,14 @@ class _WeightCard extends StatelessWidget {
     // viene chiuso, con il valore passato a Navigator.pop (o null).
     final result = await showDialog<double>(
       context: context,
-      builder: (context) => _WeightDialog(initial: current),
+      // Dialog condiviso con la tab Pesata: qui il campo vuoto cancella il peso.
+      builder: (context) => WeightInputDialog(
+        title: 'Il tuo peso',
+        initial: current,
+        emptyMeansDelete: true,
+      ),
     );
     if (result != null) await store.setWeight(exercise.id, result);
-  }
-}
-
-/// Il dialog per scrivere il peso a mano.
-///
-/// È Stateful perché possiede un TextEditingController, che va creato
-/// una volta sola e "smaltito" (dispose) quando il dialog si chiude.
-class _WeightDialog extends StatefulWidget {
-  const _WeightDialog({required this.initial});
-
-  final double? initial;
-
-  @override
-  State<_WeightDialog> createState() => _WeightDialogState();
-}
-
-class _WeightDialogState extends State<_WeightDialog> {
-  late final _controller = TextEditingController(
-    text: widget.initial == null ? '' : formatNumber(widget.initial!),
-  );
-  String? _error;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _save() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) {
-      Navigator.of(context).pop(0.0); // vuoto = cancella il peso
-      return;
-    }
-    final value = parseNumber(text);
-    if (value == null || value < 0) {
-      setState(() => _error = 'Scrivi un numero, ad esempio 22,5');
-      return;
-    }
-    Navigator.of(context).pop(value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Il tuo peso'),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(suffixText: 'kg', errorText: _error),
-        onChanged: (_) {
-          if (_error != null) setState(() => _error = null);
-        },
-        onSubmitted: (_) => _save(),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Annulla')),
-        FilledButton(onPressed: _save, child: const Text('Salva')),
-      ],
-    );
   }
 }
 

@@ -66,8 +66,9 @@
   },
 
   "cardio": {
-    "title": "Tapis Roulant",
+    "title": "Cardio",
     "durationMinutes": 30,
-    "description": "Pendenza: 10% - Velocità 5,5km/h"
+    "inclinePercent": 10,
+    "speedKmh": 5.5
   }
 }

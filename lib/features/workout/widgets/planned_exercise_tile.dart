@@ -90,19 +90,6 @@ class PlannedExerciseTile extends StatelessWidget {
   }
 }
 
-/// Mette un Divider (linea sottile) tra una riga e l'altra.
-///
-/// È una funzione "libera", fuori da ogni classe: in Dart si può.
-/// Il rientro (indent) fa partire la linea dopo l'anteprima, come su iOS.
-List<Widget> withDividers(List<Widget> rows) {
-  return [
-    for (final (index, row) in rows.indexed) ...[
-      if (index > 0) const Divider(indent: 80),
-      row,
-    ],
-  ];
-}
-
 /// L'anteprima con un cerchietto numerato sull'angolo in alto a sinistra.
 class _NumberedPreview extends StatelessWidget {
   const _NumberedPreview({required this.number, required this.exercise});

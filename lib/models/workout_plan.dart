@@ -86,25 +86,33 @@ class ExerciseBlock {
   final List<PlannedExercise> exercises;
 }
 
-/// Il blocco cardio dopo i pesi.
+/// Il blocco cardio dopo i pesi (camminata sul tapis roulant).
 class CardioBlock {
   const CardioBlock({
     required this.title,
     required this.durationMinutes,
-    required this.description,
+    required this.inclinePercent,
+    required this.speedKmh,
   });
 
   factory CardioBlock.fromJson(Map<String, dynamic> json) {
     return CardioBlock(
       title: json['title'] as String,
       durationMinutes: json['durationMinutes'] as int,
-      description: json['description'] as String,
+      // `num`: nel JSON può esserci 10 o 10.5, toDouble() va bene per entrambi.
+      inclinePercent: (json['inclinePercent'] as num).toDouble(),
+      speedKmh: (json['speedKmh'] as num).toDouble(),
     );
   }
 
   final String title;
   final int durationMinutes;
-  final String description;
+
+  /// Pendenza del tapis roulant, in percentuale (10 = 10%).
+  final double inclinePercent;
+
+  /// Velocità in km/h.
+  final double speedKmh;
 }
 
 /// La regola del calendario: in quali giorni ci si allena e in che ordine
