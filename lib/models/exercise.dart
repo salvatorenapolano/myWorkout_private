@@ -1,4 +1,4 @@
-/// Le tre famiglie di esercizi presenti nella libreria.
+/// Le famiglie di esercizi presenti nella libreria.
 /// I nomi corrispondono ai valori di "category" in exercises.json.
 enum ExerciseCategory { warmup, weights, abs }
 

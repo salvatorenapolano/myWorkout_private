@@ -12,9 +12,14 @@ class ExerciseMedia extends StatelessWidget {
 
   final Exercise exercise;
 
+  /// `static`: un valore unico condiviso da tutta l'app, non uno per widget.
+  /// Nei test non esiste una WebView vera, quindi il player YouTube non può
+  /// partire: i test lo mettono a false e vedono l'anteprima SVG.
+  static bool videoEnabled = true;
+
   @override
   Widget build(BuildContext context) {
-    final url = exercise.videoUrl;
+    final url = videoEnabled ? exercise.videoUrl : null;
     // Dal link completo ("https://www.youtube.com/watch?v=GB2Jgp5FyNE")
     // ricava solo l'id del video ("GB2Jgp5FyNE"). null se il link non è valido.
     final videoId = url == null ? null : YoutubePlayerController.convertUrlToId(url);

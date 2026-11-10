@@ -7,8 +7,10 @@ import 'package:my_workout/features/workout/widgets/step_number.dart';
 import 'package:my_workout/features/workout/widgets/today_banner.dart';
 import 'package:my_workout/utils/formatters.dart';
 import 'package:my_workout/widgets/dividers.dart';
+import 'package:my_workout/widgets/main_app_bar.dart';
 
-/// Tab "Allenamento": cosa tocca oggi, scelta A/B e i 4 blocchi della seduta.
+/// Tab "Allenamento": cosa tocca oggi, scelta del giorno (Push/Pull/Legs)
+/// e i blocchi della seduta.
 class WorkoutPage extends StatefulWidget {
   const WorkoutPage({super.key});
 
@@ -19,17 +21,21 @@ class WorkoutPage extends StatefulWidget {
 class _WorkoutPageState extends State<WorkoutPage> {
   // Il caricamento parte UNA volta, quando la pagina nasce.
   // Se lo scrivessimo dentro build() ripartirebbe a ogni ridisegno!
-  // `late` = "inizializzalo la prima volta che lo uso".
-  late final Future<WorkoutData> _dataFuture = WorkoutRepository().load();
+  // `late` = "inizializzalo la prima volta che lo uso" (cioè nel primo build,
+  // dove `context` c'è già). DefaultAssetBundle.of(context) è il bundle dei
+  // dati: legge prima quelli scaricati da GitHub, poi quelli dell'app.
+  late final Future<WorkoutData> _dataFuture =
+      WorkoutRepository(bundle: DefaultAssetBundle.of(context)).load();
 
-  // La scheda scelta col selettore A/B.
+  // Il giorno scelto col selettore Push/Pull/Legs.
   // null = mostra quella del prossimo allenamento.
   String? _selectedWorkoutId;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Allenamento')),
+      // L'header comune a tutte le tab: "myWorkout" e il cerchio del profilo.
+      appBar: const MainAppBar(),
       // FutureBuilder ridisegna la pagina quando il Future cambia stato:
       // in attesa → completato con i dati, oppure → errore.
       body: FutureBuilder<WorkoutData>(
@@ -92,13 +98,25 @@ class _WorkoutPageState extends State<WorkoutPage> {
         ),
         const SizedBox(height: 24),
 
-        // 1 · Riscaldamento
-        ExerciseBlockTile(number: 1, block: plan.warmup, data: data),
+        // 1 · Riscaldamento: ogni giorno ha la sua mobilità.
+        ExerciseBlockTile(number: 1, block: workout.warmup, data: data),
         const SizedBox(height: 24),
 
         // 2 · Pesi: sempre visibile, è la parte principale.
         // Il titolo sta fuori dalla card, le righe dentro.
         _SectionTitle(number: 2, text: 'Pesi · ${workout.name}'),
+        if (workout.intro case final intro?)
+          // `case final intro?`: se intro non è null lo "estrae" in una
+          // variabile già di tipo String. Se è null, la riga non c'è.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            child: Text(
+              intro,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ),
         const SizedBox(height: 8),
         Card(
           child: Column(

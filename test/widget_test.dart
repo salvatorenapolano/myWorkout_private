@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,49 +7,63 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:my_workout/app.dart';
 import 'package:my_workout/data/body_weight_store.dart';
+import 'package:my_workout/data/remote_data.dart';
 import 'package:my_workout/data/shopping_store.dart';
 import 'package:my_workout/data/weight_store.dart';
+import 'package:my_workout/features/workout/widgets/exercise_media.dart';
 
 void main() {
   late WeightStore weights;
   late BodyWeightStore bodyWeights;
   late ShoppingStore shopping;
+  late DataStore data;
+
+  // Nei test non c'è una WebView: niente player YouTube, solo l'anteprima.
+  setUpAll(() => ExerciseMedia.videoEnabled = false);
 
   setUp(() async {
     // rootBundle tiene in cache i file già letti. Nei test ogni testWidgets
     // ha il suo "tempo finto": un caricamento iniziato nel test precedente
     // non si completerebbe mai in quello dopo. Svuotiamo la cache ogni volta.
     rootBundle.clear();
-    SharedPreferences.setMockInitialValues({'weight_goblet_squat': 16.0});
+    SharedPreferences.setMockInitialValues({'weight_hack_squat': 16.0});
     weights = await WeightStore.load();
     bodyWeights = await BodyWeightStore.load();
     shopping = await ShoppingStore.load();
+    // Una cartella vuota: nessun dato scaricato, l'app usa i suoi asset.
+    data = DataStore(root: Directory.systemTemp.createTempSync('my_workout_dati'));
   });
 
   testWidgets('La tab Allenamento mostra la scheda dal JSON', (tester) async {
-    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping));
+    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping, data: data));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Scheda A'));
+    await tester.tap(find.text('Push'));
     await tester.pumpAndSettle();
-    expect(find.text('Leg press'), findsOneWidget);
-    expect(find.text("3 × 10–12 · rec. 2'"), findsOneWidget);
+    expect(find.text('Chest press'), findsOneWidget);
+    expect(find.text("4 × 8–12 · rec. 2'"), findsOneWidget);
 
-    await tester.tap(find.text('Scheda B'));
+    await tester.tap(find.text('Legs'));
     await tester.pumpAndSettle();
-    expect(find.text('Goblet squat'), findsOneWidget);
+    expect(find.text('Hack squat'), findsOneWidget);
     // Il peso salvato compare già nella riga.
     expect(find.text('16 kg'), findsOneWidget);
+
+    // In fondo c'è la camminata: 30 min, 10%, 5,5 km/h.
+    await tester.scrollUntilVisible(find.text('⏱️ 30 min'), 200);
+    expect(find.text('💨 5,5 km/h'), findsOneWidget);
   });
 
   testWidgets('Nel dettaglio il peso cambia e la lista si aggiorna', (tester) async {
-    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping));
+    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping, data: data));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Scheda B'));
+    await tester.tap(find.text('Legs'));
     await tester.pumpAndSettle();
 
-    // Apro il dettaglio del goblet squat.
-    await tester.tap(find.text('Goblet squat'));
+    // Apro il dettaglio dell'hack squat (prima lo porto sullo schermo).
+    await tester.ensureVisible(find.text('Hack squat'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hack squat'));
     await tester.pumpAndSettle();
     expect(find.text('Il tuo peso'), findsOneWidget);
     expect(find.text('16 kg'), findsOneWidget);
@@ -83,16 +99,31 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     expect(find.text('22,5 kg'), findsOneWidget);
-    expect(weights.weightFor('goblet_squat'), 22.5);
+    expect(weights.weightFor('hack_squat'), 22.5);
+  });
+
+  testWidgets("L'header ha il nome dell'app e il profilo apre i dati", (tester) async {
+    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping, data: data));
+    await tester.pumpAndSettle();
+    expect(find.text('myWorkout'), findsOneWidget);
+    expect(find.text('SN'), findsOneWidget);
+
+    // Tocco il cerchio: si apre il pannello dal basso.
+    await tester.tap(find.byTooltip('Profilo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Scarica gli ultimi dati'), findsOneWidget);
+    expect(find.textContaining('installata'), findsOneWidget);
+    // Senza dati scaricati non c'è niente a cui tornare.
+    expect(find.text("Torna ai dati dell'app"), findsNothing);
   });
 
   testWidgets('La barra in basso cambia pagina', (tester) async {
-    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping));
+    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping, data: data));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.restaurant_menu_outlined));
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(AppBar, 'Dieta'), findsOneWidget);
+    expect(find.widgetWithText(Tab, 'Lun'), findsOneWidget);
 
     // Scelgo lunedì dalle schede in alto.
     await tester.tap(find.widgetWithText(Tab, 'Lun'));
@@ -102,16 +133,15 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(AppBar, 'Spesa'), findsOneWidget);
+    expect(find.widgetWithText(Tab, 'Settimanale'), findsOneWidget);
   });
 
   testWidgets('Tab Pesata: aggiungo, correggo e cancello una pesata', (tester) async {
-    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping));
+    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping, data: data));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.monitor_weight_outlined));
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(AppBar, 'Pesata settimanale'), findsOneWidget);
     expect(find.textContaining('Nessuna pesata salvata'), findsOneWidget);
 
     // Il + apre il dialog: scrivo il peso di oggi.
@@ -141,7 +171,7 @@ void main() {
   });
 
   testWidgets('Tab Spesa: spunto, Reset e Annulla', (tester) async {
-    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping));
+    await tester.pumpWidget(MyWorkoutApp(weights: weights, bodyWeights: bodyWeights, shopping: shopping, data: data));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
     await tester.pumpAndSettle();

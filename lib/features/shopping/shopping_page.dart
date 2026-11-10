@@ -4,6 +4,7 @@ import 'package:my_workout/data/shopping_repository.dart';
 import 'package:my_workout/data/shopping_store.dart';
 import 'package:my_workout/models/shopping.dart';
 import 'package:my_workout/widgets/dividers.dart';
+import 'package:my_workout/widgets/main_app_bar.dart';
 
 /// Tab "Spesa": due schede (Settimanale, Mensile) con i prodotti da
 /// spuntare, e il tasto Reset sempre visibile in basso a destra.
@@ -15,7 +16,9 @@ class ShoppingPage extends StatefulWidget {
 }
 
 class _ShoppingPageState extends State<ShoppingPage> {
-  late final Future<List<ShoppingList>> _listsFuture = ShoppingRepository().load();
+  // Il bundle dei dati: prima quelli scaricati da GitHub, poi quelli dell'app.
+  late final Future<List<ShoppingList>> _listsFuture =
+      ShoppingRepository(bundle: DefaultAssetBundle.of(context)).load();
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +36,7 @@ class _ShoppingPageState extends State<ShoppingPage> {
 
   Widget _simplePage(Widget child) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Spesa')),
+      appBar: const MainAppBar(),
       body: Center(child: Padding(padding: const EdgeInsets.all(24), child: child)),
     );
   }
@@ -44,8 +47,7 @@ class _ShoppingPageState extends State<ShoppingPage> {
     return DefaultTabController(
       length: lists.length,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Spesa'),
+        appBar: MainAppBar(
           bottom: TabBar(
             tabs: [for (final list in lists) Tab(text: list.name)],
             padding: const EdgeInsets.symmetric(horizontal: 12),

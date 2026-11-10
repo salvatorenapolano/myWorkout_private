@@ -6,6 +6,7 @@ import 'package:my_workout/models/body_weight.dart';
 import 'package:my_workout/utils/formatters.dart';
 import 'package:my_workout/widgets/dividers.dart';
 import 'package:my_workout/widgets/weight_input_dialog.dart';
+import 'package:my_workout/widgets/main_app_bar.dart';
 
 /// Tab "Pesata": il promemoria del venerdì, lo storico delle pesate
 /// e il pulsante + per aggiungere quella di oggi.
@@ -21,7 +22,7 @@ class WeighInPage extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Pesata settimanale')),
+      appBar: const MainAppBar(),
       // FloatingActionButton: il pulsante rotondo che "galleggia" in basso
       // a destra, sopra la lista. È l'azione principale della pagina.
       floatingActionButton: FloatingActionButton(

@@ -31,9 +31,9 @@ class TodayBanner extends StatelessWidget {
       _ when DateUtils.isSameDay(next.date, now) => (
           Icons.fitness_center,
           'Oggi: ${plan.workoutById(next.workoutId).name}',
-          // Niente orario: l'ora (plan.schedule.time) resta nel JSON
-          // ma non la mostriamo.
-          plan.name,
+          // Sotto, i muscoli del giorno. Niente orario: l'ora
+          // (plan.schedule.time) resta nel JSON ma non la mostriamo.
+          plan.workoutById(next.workoutId).focus ?? plan.name,
           true,
         ),
       _ => (
@@ -45,8 +45,10 @@ class TodayBanner extends StatelessWidget {
         ),
     };
 
-    // La lettera gigante della scheda ("A" o "B"), solo nei giorni di palestra.
-    final letter = isToday ? next?.workoutId : null;
+    // Il nome gigante del giorno ("PUSH"), solo nei giorni di palestra.
+    final letter = isToday && next != null
+        ? plan.workoutById(next.workoutId).name.toUpperCase()
+        : null;
 
     // L'aspetto (colori, forma, watermark) lo decide StatusBanner:
     // qui scegliamo solo cosa scriverci.
@@ -59,10 +61,12 @@ class TodayBanner extends StatelessWidget {
           ? null
           : Text(
               letter,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: AppTheme.displayFont,
                 fontWeight: FontWeight.w700,
-                fontSize: 150,
+                // Una lettera sola ("A") può essere enorme, una parola
+                // ("PUSH") deve stare nel riquadro.
+                fontSize: letter.length <= 2 ? 150 : 96,
                 height: 1,
               ),
             ),

@@ -14,20 +14,38 @@ void main() {
   final plan = data.plan;
 
   group('Lettura JSON', () {
-    test('legge schede e blocchi', () {
-      expect(plan.workouts.map((w) => w.id), ['A', 'B']);
-      expect(plan.warmup.exercises, hasLength(8));
+    test('legge i tre giorni e i loro blocchi', () {
+      expect(plan.workouts.map((w) => w.id), ['push', 'pull', 'legs']);
+
+      final push = plan.workoutById('push');
+      expect(push.name, 'Push');
+      expect(push.focus, 'Petto, spalle, tricipiti');
+      expect(push.warmup.exercises, hasLength(6));
+      expect(push.exercises, hasLength(7));
+      expect(data.exerciseFor(push.exercises.first).name, 'Chest press');
+
+      // Ogni giorno ha il suo riscaldamento: il Legs parte dallo squat lento.
+      expect(plan.workoutById('legs').warmup.exercises[1].exerciseId, 'squat_lento');
+      expect(plan.workoutById('legs').exercises, hasLength(8));
+    });
+
+    test('serie totali come nella scheda: Push 21, Pull 20, Legs 23', () {
+      int totalSets(String id) =>
+          plan.workoutById(id).exercises.fold(0, (sum, p) => sum + (p.sets ?? 0));
+      expect(totalSets('push'), 21);
+      expect(totalSets('pull'), 20);
+      expect(totalSets('legs'), 23);
+    });
+
+    test('addominali e cardio sono uguali tutti i giorni', () {
       expect(
         plan.abs.exercises.map((p) => p.exerciseId),
-        ['plank', 'plank_laterale', 'leg_raise', 'heel_touch'],
+        ['crunch_macchina', 'plank', 'plank_laterale', 'leg_raise', 'heel_touch'],
       );
       expect(plan.cardio.title, 'Cardio');
       expect(plan.cardio.durationMinutes, 30);
       expect(plan.cardio.inclinePercent, 10);
       expect(plan.cardio.speedKmh, 5.5);
-      // Il plank sta solo negli addominali, non più tra i pesi della Scheda A.
-      expect(plan.workoutById('A').exercises.map((p) => p.exerciseId), isNot(contains('plank')));
-      expect(data.exerciseFor(plan.workoutById('A').exercises.first).name, 'Leg press');
     });
 
     test('un id sbagliato dà un errore chiaro', () {
@@ -37,39 +55,40 @@ void main() {
         throwsA(isA<FormatException>()),
       );
     });
+
   });
 
-  group('Calendario come nel PDF', () {
-    test('18 sedute, dal 19/10 (A) al 27/11 (B)', () {
+  group('Calendario', () {
+    test('17 sedute, dal 16/11 (Push) al 23/12 (Pull)', () {
       final sessions = plan.sessions;
-      expect(sessions, hasLength(18));
-      expect(sessions.first.date, DateTime(2026, 10, 19));
-      expect(sessions.first.workoutId, 'A');
-      expect(sessions.last.date, DateTime(2026, 11, 27));
-      expect(sessions.last.workoutId, 'B');
+      expect(sessions, hasLength(17));
+      expect(sessions.first.date, DateTime(2026, 11, 16));
+      expect(sessions.first.workoutId, 'push');
+      expect(sessions.last.date, DateTime(2026, 12, 23));
+      expect(sessions.last.workoutId, 'pull');
     });
 
-    test("supera il cambio dell'ora legale (25/10)", () {
-      // Settimana 2: lunedì 26/10 Scheda B.
-      final session = plan.sessions[3];
-      expect(session.date, DateTime(2026, 10, 26));
-      expect(session.workoutId, 'B');
+    test('lunedì Push, mercoledì Pull, venerdì Legs, ogni settimana', () {
+      const expected = {DateTime.monday: 'push', DateTime.wednesday: 'pull', DateTime.friday: 'legs'};
+      for (final session in plan.sessions) {
+        expect(session.workoutId, expected[session.date.weekday], reason: '${session.date}');
+      }
     });
 
-    test('domenica 8/11 → lunedì 9/11, Scheda B', () {
-      final next = plan.nextSessionFrom(DateTime(2026, 11, 8, 10, 30))!;
-      expect(next.date, DateTime(2026, 11, 9));
-      expect(next.workoutId, 'B');
+    test('martedì 10/11, prima della scheda → lunedì 16/11, Push', () {
+      final next = plan.nextSessionFrom(DateTime(2026, 11, 10, 10, 30))!;
+      expect(next.date, DateTime(2026, 11, 16));
+      expect(next.workoutId, 'push');
     });
 
     test('nel giorno di allenamento, la seduta è oggi', () {
-      final next = plan.nextSessionFrom(DateTime(2026, 11, 11, 18))!;
-      expect(next.date, DateTime(2026, 11, 11));
-      expect(next.workoutId, 'A');
+      final next = plan.nextSessionFrom(DateTime(2026, 11, 20, 18))!;
+      expect(next.date, DateTime(2026, 11, 20));
+      expect(next.workoutId, 'legs');
     });
 
-    test('dopo il 27/11 la scheda è finita', () {
-      expect(plan.nextSessionFrom(DateTime(2026, 11, 28)), isNull);
+    test('dopo il 23/12 la scheda è finita', () {
+      expect(plan.nextSessionFrom(DateTime(2026, 12, 24)), isNull);
     });
   });
 
@@ -96,13 +115,13 @@ void main() {
     });
   });
 
-  test('i link YouTube sono validi e solo sugli esercizi coi pesi', () {
-    final withVideo = data.exercises.values.where((e) => e.videoUrl != null).toList();
-    // 13 dei 14 esercizi coi pesi: solo il goblet squat non ha una macchina gym80.
-    expect(withVideo, hasLength(13));
-    for (final e in withVideo) {
+  test('ogni esercizio ha un video YouTube valido e dei consigli', () {
+    for (final e in data.exercises.values) {
+      // Il cardio leggero (cyclette o tapis roulant) non ha bisogno di video.
+      if (e.id == 'cardio_riscaldamento') continue;
+      expect(e.videoUrl, isNotNull, reason: e.id);
       expect(YoutubePlayerController.convertUrlToId(e.videoUrl!), isNotNull, reason: e.id);
-      expect(e.hasWeight, isTrue, reason: e.id);
+      expect(e.tips, isNotEmpty, reason: e.id);
     }
   });
 
@@ -114,10 +133,16 @@ void main() {
     expect(missing, isEmpty, reason: 'Rilancia tool/generate_exercise_previews.py');
   });
 
+  test('ogni esercizio della libreria è usato nella scheda', () {
+    final used = plan.allPlannedExercises.map((p) => p.exerciseId).toSet();
+    expect(data.exercises.keys.where((id) => !used.contains(id)), isEmpty);
+  });
+
   test('le illustrazioni dei muscoli esistono, solo sugli esercizi coi pesi', () {
     final withImage = data.exercises.values.where((e) => e.muscleAsset != null).toList();
-    // Tutti e 14 gli esercizi coi pesi hanno la loro illustrazione.
-    expect(withImage, hasLength(14));
+    // 20 dei 23 esercizi coi pesi: iperestensioni, adductor e calf non hanno
+    // ancora un'illustrazione (mancano lombari, adduttori e polpacci).
+    expect(withImage, hasLength(20));
     for (final e in withImage) {
       expect(File(e.muscleAsset!).existsSync(), isTrue, reason: e.muscleAsset);
       expect(e.hasWeight, isTrue, reason: e.id);

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_workout/data/diet_repository.dart';
 import 'package:my_workout/features/diet/widgets/diet_day_view.dart';
 import 'package:my_workout/models/diet.dart';
+import 'package:my_workout/widgets/main_app_bar.dart';
 
 /// Tab "Dieta": la settimana tipo, un giorno per scheda (Lun … Dom).
 class DietPage extends StatefulWidget {
@@ -13,7 +14,8 @@ class DietPage extends StatefulWidget {
 }
 
 class _DietPageState extends State<DietPage> {
-  late final Future<Diet> _dietFuture = DietRepository().load();
+  // Il bundle dei dati: prima quelli scaricati da GitHub, poi quelli dell'app.
+  late final Future<Diet> _dietFuture = DietRepository(bundle: DefaultAssetBundle.of(context)).load();
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class _DietPageState extends State<DietPage> {
 
   Widget _simplePage(Widget child) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Dieta')),
+      appBar: const MainAppBar(),
       body: Center(child: Padding(padding: const EdgeInsets.all(24), child: child)),
     );
   }
@@ -50,8 +52,7 @@ class _DietPageState extends State<DietPage> {
       length: diet.days.length,
       initialIndex: today,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Dieta'),
+        appBar: MainAppBar(
           bottom: TabBar(
             tabs: [for (final day in diet.days) Tab(text: day.shortName)],
             labelPadding: EdgeInsets.zero,

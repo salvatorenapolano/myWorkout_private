@@ -23,7 +23,7 @@ class PlannedExercise {
 
   final String exerciseId;
 
-  /// null nel riscaldamento e nello stretching, dove non ci sono serie.
+  /// null nel riscaldamento, dove non ci sono serie.
   final int? sets;
 
   /// Testo e non numero: può essere "10–12", "30\"", "10 per lato"...
@@ -43,21 +43,43 @@ List<PlannedExercise> _plannedExercisesFromJson(Object? json) {
       .toList();
 }
 
-/// Una scheda di pesi (A o B).
+/// Un giorno della scheda (Push, Pull, Legs): il suo riscaldamento e i pesi.
+/// Addominali e cardio sono uguali per tutti e stanno in [WorkoutPlan].
 class Workout {
-  const Workout({required this.id, required this.name, required this.exercises});
+  const Workout({
+    required this.id,
+    required this.name,
+    required this.warmup,
+    required this.exercises,
+    this.focus,
+    this.intro,
+  });
 
   factory Workout.fromJson(Map<String, dynamic> json) {
     return Workout(
       id: json['id'] as String,
       name: json['name'] as String,
+      focus: json['focus'] as String?,
+      intro: json['intro'] as String?,
+      warmup: ExerciseBlock.fromJson(json['warmup'] as Map<String, dynamic>),
       exercises: _plannedExercisesFromJson(json['exercises']),
     );
   }
 
   final String id;
   final String name;
+
+  /// I muscoli del giorno: "Petto, spalle, tricipiti".
+  final String? focus;
+
+  /// Una riga sotto il titolo dei pesi: "20 serie. Prima la schiena…".
+  final String? intro;
+
+  final ExerciseBlock warmup;
   final List<PlannedExercise> exercises;
+
+  /// Tutti gli esercizi del giorno, riscaldamento compreso.
+  List<PlannedExercise> get allPlannedExercises => [...warmup.exercises, ...exercises];
 }
 
 /// Un blocco della seduta fatto di esercizi: riscaldamento o addominali.
@@ -86,7 +108,7 @@ class ExerciseBlock {
   final List<PlannedExercise> exercises;
 }
 
-/// Il blocco cardio dopo i pesi (camminata sul tapis roulant).
+/// Il blocco cardio dopo gli addominali (camminata sul tapis roulant).
 class CardioBlock {
   const CardioBlock({
     required this.title,
@@ -132,7 +154,7 @@ class Schedule {
   final List<int> weekdays;
   final String time;
 
-  /// Ordine delle schede, ad esempio ["A", "B"].
+  /// Ordine delle schede, ad esempio ["push", "pull", "legs"].
   final List<String> rotation;
 }
 
@@ -153,7 +175,6 @@ class WorkoutPlan {
     required this.endDate,
     required this.schedule,
     required this.generalNotes,
-    required this.warmup,
     required this.workouts,
     required this.abs,
     required this.cardio,
@@ -168,7 +189,6 @@ class WorkoutPlan {
       endDate: DateTime.parse(json['endDate'] as String),
       schedule: Schedule.fromJson(json['schedule'] as Map<String, dynamic>),
       generalNotes: json['generalNotes'] as String,
-      warmup: ExerciseBlock.fromJson(json['warmup'] as Map<String, dynamic>),
       workouts: (json['workouts'] as List)
           .map((item) => Workout.fromJson(item as Map<String, dynamic>))
           .toList(),
@@ -183,10 +203,9 @@ class WorkoutPlan {
   final DateTime endDate;
   final Schedule schedule;
   final String generalNotes;
-  final ExerciseBlock warmup;
   final List<Workout> workouts;
 
-  /// Gli addominali, dopo i pesi e prima della camminata.
+  /// Gli addominali, dopo i pesi e prima della camminata: uguali tutti i giorni.
   final ExerciseBlock abs;
   final CardioBlock cardio;
 
@@ -194,8 +213,7 @@ class WorkoutPlan {
 
   /// Tutti gli esercizi della scheda, da tutti i blocchi.
   List<PlannedExercise> get allPlannedExercises => [
-        ...warmup.exercises,
-        for (final workout in workouts) ...workout.exercises,
+        for (final workout in workouts) ...workout.allPlannedExercises,
         ...abs.exercises,
       ];
 

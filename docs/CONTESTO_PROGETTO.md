@@ -14,7 +14,7 @@ App Flutter personale per iPhone: la mia scheda di allenamento, la dieta settima
 
 | Tab | Stato |
 |---|---|
-| **Allenamento** | ✅ Fatto: scheda del giorno, A/B, dettaglio esercizio con video e pesi salvati |
+| **Allenamento** | ✅ Fatto: Fase 2 Push/Pull/Legs, dettaglio esercizio con video, consigli e pesi salvati |
 | **Dieta** | ✅ Fatto: settimana tipo, pranzo e cena |
 | **Pesata** | ✅ Fatto: promemoria del venerdì, storico pesate con differenze |
 | **Spesa** | ✅ Fatto: liste Settimanale / Mensile con spunte e Reset |
@@ -23,8 +23,8 @@ App Flutter personale per iPhone: la mia scheda di allenamento, la dieta settima
 
 - Flutter + Material 3, tema chiaro/scuro automatico. Colore seme **verde petrolio `0xFF0E7C86`** (il rosso non mi piace), variante `DynamicSchemeVariant.fidelity` per tenere il petrolio pieno.
 - Stile "lavagna della sala pesi": font **Barlow Semi Condensed** (in `assets/fonts/`, licenza OFL) per titoli e numeri, font di sistema per il testo; raggi 28 (banner) / 20 (card) / 12 (riquadri interni); pagine grigio chiaro con card bianche (in scuro: card più chiare dello sfondo). Tutto in `lib/app_theme.dart`.
-- Pacchetti: `flutter_svg` (anteprime), `shared_preferences` (pesi salvati), `youtube_player_iframe` (video).
-- Nessun backend: i contenuti sono **file JSON negli asset**, i dati dell'utente (pesi) sono salvati sul telefono.
+- Pacchetti: `flutter_svg` (anteprime), `shared_preferences` (pesi salvati), `youtube_player_iframe` (video), `http` + `path_provider` (dati da GitHub).
+- Nessun backend: i contenuti sono **file JSON e immagini negli asset**, aggiornabili da GitHub senza ricompilare (vedi "Dati online"); i dati dell'utente (pesi) sono salvati sul telefono.
 - Android: permesso `INTERNET` nel manifest (serve ai video). Nome app sotto l'icona: **myWorkout**. Bundle id `com.salva.my_workout`.
 - Icona: dopo `dart run flutter_launcher_icons` **ripristinare** `ios/Runner.xcodeproj/project.pbxproj` (`git checkout -- …`): la v0.14.4 lo modifica per errore (mette `AppIcon` in `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS`).
 
@@ -32,13 +32,14 @@ App Flutter personale per iPhone: la mia scheda di allenamento, la dieta settima
 
 ```
 lib/
-├── main.dart                 # carica WeightStore poi runApp
-├── app.dart                  # MaterialApp, WeightScope sopra tutto
+├── main.dart                 # carica gli store (pesi, pesate, spesa, DataStore) poi runApp
+├── app.dart                  # MaterialApp, gli Scope sopra tutto, DefaultAssetBundle = bundle dei dati
 ├── app_theme.dart            # AppTheme.light()/dark(): colori, font, raggi, componenti
 ├── home_shell.dart           # NavigationBar 3 tab + IndexedStack
 ├── models/                   # exercise.dart, workout_plan.dart, diet.dart (fromJson)
 ├── data/                     # workout_repository, diet_repository (leggono e validano i JSON)
 │                             # weight_store.dart (ChangeNotifier + InheritedNotifier WeightScope)
+│                             # remote_data.dart: DataBundle, DataStore (download da GitHub), DataScope
 ├── utils/formatters.dart     # formatRest (120→2', 90→90"), formatWeight (22,5 kg), date in italiano
 └── features/
     ├── workout/              # workout_page, exercise_detail_page, widgets/ (today_banner,
@@ -46,13 +47,15 @@ lib/
     ├── diet/                 # diet_page (TabBar Lun…Dom), widgets/ (diet_day_view, meal_card)
     ├── weigh_in/             # weigh_in_page (storico, +), widgets/weigh_in_banner
     └── shopping/             # shopping_page (schede Settimanale/Mensile, checkbox, Reset)
-lib/widgets/                  # condivisi: status_banner (riquadro in cima), weight_input_dialog, dividers
-assets/data/                  # exercises.json, workout_plan.json, diet.json
+│   └── profile/              # profile_avatar (cerchio "SN"), profile_sheet (pannello dati)
+lib/widgets/                  # condivisi: main_app_bar (header), status_banner, weight_input_dialog, dividers
+assets/data/                  # exercises.json, workout_plan.json, diet.json, shopping.json
 assets/images/exercises/      # <id>.svg, una anteprima per esercizio
 assets/images/muscles/        # illustrazioni muscoli (.webp scontornati, sfondo trasparente), scelte con "muscleImage"
 tool/generate_exercise_previews.py   # genera tutti gli SVG (pose + colori)
 tool/prepare_muscle_images.py        # ritaglia e scontorna le illustrazioni dei muscoli (python … <cartella_originali>)
-tool/generate_app_icon.py            # icona: 💪 Noto (Apache 2.0) su gradiente petrolio → assets/icon/
+tool/sync_data_repo.py               # copia JSON e immagini nel repo pubblico ../myWorkout-data
+tool/generate_app_icon.py            # icona: manubrio su gradiente petrolio (+ varianti iOS scura e colorata) → assets/icon/
 flutter_launcher_icons.yaml          # poi `dart run flutter_launcher_icons` crea tutte le misure iOS/Android
 test/                         # test su JSON, calendario, banner, pesi, widget
 codemagic.yaml                # build iOS nel cloud
@@ -61,18 +64,21 @@ codemagic.yaml                # build iOS nel cloud
 ## I dati
 
 ### `exercises.json` — libreria esercizi (il "come")
-Ogni esercizio: `id`, `name`, `category` (`warmup` | `weights` | `abs`), `muscles[]`, `description`, `tips[]`, `images[]`, `videoUrl`.
+Ogni esercizio: `id`, `name`, `category` (`warmup` | `weights` | `abs`), `muscles[]`, `description`, `tips[]`, `images[]`, `videoUrl`. 39 esercizi, tutti usati nella scheda (un test lo controlla).
 - Solo `weights` ha il riquadro "Il tuo peso".
-- `videoUrl`: video YouTube presi dalle **pagine prodotto di gym80.de** (es. leg press → gym80.de/en/product/3030/). 13 esercizi coi pesi su 14 hanno un video; il goblet squat no.
+- `description`: per i pesi è il "Come si fa" della scheda Fase 2. `tips[]` ("Consigli" nel dettaglio): 2–3 consigli per esercizio, **scritti da Claude**, non dal PT.
+- `videoUrl`: tutti tranne il cardio leggero. **Macchine** → video delle pagine prodotto **gym80.de** (es. leg press 3030, butterfly 3022, butterfly reverse 3025, adduction 3029, abduction 3028, calf 3018, triceps 3011, biceps 3010, seated row 3040, 45° back extension 4119). **Manubri, corpo libero, riscaldamento, addominali** → tutorial YouTube in italiano (Project inVictus, Umberto Miletto, Marcello Chiapponi…). Verificati con l'oEmbed di YouTube (esistono e si possono incorporare).
 - L'anteprima è `assets/images/exercises/<id>.svg` (ricavata dall'id).
-- `muscleImage` (facoltativo, solo pesi): nome dell'illustrazione in `assets/images/muscles/` (petto, dorsali, femorali, spalle, bicipiti, tricipiti, glutei, retto_addominale, quadricipiti; addome_obliqui per ora non usata). Tutti i 14 esercizi coi pesi ce l'hanno.
+- `muscleImage` (facoltativo, solo pesi): nome dell'illustrazione in `assets/images/muscles/` (petto, dorsali, femorali, spalle, bicipiti, tricipiti, glutei, retto_addominale, quadricipiti; addome_obliqui per ora non usata). 20 esercizi coi pesi su 23: mancano iperestensioni, adductor e calf (non ci sono illustrazioni di lombari, adduttori e polpacci).
 
 ### `workout_plan.json` — la scheda (il "quanto")
-Fase 1 · Rimettersi in forma, v2 del personal trainer.
-- `schedule`: lunedì, mercoledì, venerdì alle 15:00, rotazione **A, B, A, B…** dal **19/10/2026** al **27/11/2026** (18 sedute). Il calendario si calcola, non è scritto riga per riga.
-- Seduta = **1 Riscaldamento** (10 min, 8 esercizi) → **2 Pesi** (Scheda A: 7 esercizi, Scheda B: 8) → **3 Addominali** (plank 3×30" +5"/settimana, plank laterale 20" per lato, leg raise 10–12, heel touch 12 per lato) → **4 Cardio** sul tapis roulant (`durationMinutes` 30, `inclinePercent` 10, `speedKmh` 5,5; in app: "⏱️ 30 min  ⛰️ 10%  💨 5,5 km/h").
-- Ogni esercizio in scheda: `exerciseId`, `sets?`, `reps` (testo: "10–12", "30\"", "12 per lato"), `restSeconds?`, `notes?`, `alternatives[]` ("se è occupato").
-- Nota generale: finire ogni serie con 2–3 ripetizioni "nel serbatoio".
+Fase 2 · Push/Pull/Legs (sostituisce la Fase 1, che resta nella storia git).
+- `schedule`: lunedì, mercoledì, venerdì alle 15:00, rotazione **push, pull, legs** dal **16/11/2026** al **23/12/2026** (17 sedute: ogni settimana lun Push, mer Pull, ven Legs). Il calendario si calcola, non è scritto riga per riga.
+- `workouts[]`: ogni giorno ha `id`, `name`, `focus` (i muscoli, sotto il banner), `intro` ("21 serie…", sotto il titolo dei pesi), **il suo** `warmup` ed `exercises` (i pesi). Serie: Push 21, Pull 20, Legs 23.
+- Seduta = **1 Riscaldamento** (5' cardio + mobilità del giorno) → **2 Pesi** → **3 Addominali** (uguali tutti i giorni: crunch alla macchina 3×12–15 + circuito plank, plank laterale, leg raise, heel touch) → **4 Cardio** fisso: 30 min, pendenza 10%, 5,5 km/h, senza note. **Niente stretching** (tolto apposta, anche se è nella scheda del PT).
+- Ogni esercizio in scheda: `exerciseId`, `sets?`, `reps` (testo: "10–12", "30\"", "12 per lato"), `restSeconds?`, `notes?`, `alternatives[]` ("se è occupato", solo quelle date dal PT nella Fase 1).
+- Macchinari nuovi: nota "Settimana 1: prima una serie leggera da 10…" sulla riga. French press solo settimane 1, 3, 5 (nella nota).
+- `generalNotes` (non mostrata): doppia progressione e regola dei macchinari nuovi.
 
 ### `diet.json` — la settimana tipo
 - Catalogo `foods` (id, nome, **reparto**: Frutta e verdura, Carne e pesce, Frigo, Pane, Dispensa). La spesa NON è calcolata da qui: ha il suo `shopping.json`.
@@ -92,10 +98,12 @@ Due liste (`Settimanale` · fresco, `Mensile` · dispensa), ognuna con sezioni e
 
 ## Com'è fatta l'interfaccia
 
+**Header** (tutte e 4 le tab, `MainAppBar`): "my**Workout**" (Workout nel colore principale) a sinistra, a destra il cerchio grigio sfumato con le iniziali **SN**. Tocco sul cerchio → pannello dal basso: quali dati sta usando l'app, **Scarica gli ultimi dati** (barra "File 3 di 40"), **Torna ai dati dell'app**. Le pagine non hanno più un titolo loro.
+
 **Allenamento**
-- In alto `TodayBanner`: "Oggi: Scheda A" (colorato) / "Oggi riposo · prossimo allenamento domani: Scheda B" / "Scheda terminata". Senza orario (resta nel JSON).
-- Selettore Scheda A / Scheda B: parte sulla scheda di turno, che ha un'icona calendario.
-- Sotto "2 · Pesi" niente nota generale (resta nel JSON).
+- In alto `TodayBanner`: "Oggi: Push" + muscoli del giorno (colorato, con "PUSH" in filigrana) / "Oggi riposo · prossimo allenamento domani: Pull" / "Scheda terminata". Senza orario (resta nel JSON).
+- Selettore Push / Pull / Legs: parte sul giorno di turno, che ha un'icona calendario.
+- Sotto "2 · Pesi" la riga `intro` del giorno; niente nota generale (resta nel JSON).
 - Righe esercizio: anteprima SVG (con **numero d'ordine** nell'angolo, solo nei pesi), nome, "3 × 10–12 · rec. 90\"", peso salvato a destra.
 - Riscaldamento e addominali sono blocchi espandibili.
 
@@ -113,10 +121,18 @@ Due liste (`Settimanale` · fresco, `Mensile` · dispensa), ognuna con sezioni e
 
 - Niente card grande "prossimo allenamento": c'è il banner del giorno.
 - Niente pulsante "avvia recupero" / timer per ora.
-- Niente stretching finale.
-- Plank solo negli addominali, non nella Scheda A.
+- Niente stretching finale (nemmeno in Fase 2).
+- Cardio fisso 30 min / 10% / 5,5 km/h, senza note.
 - Dieta generica: giorni della settimana senza date.
-- Video solo da gym80 (pagine prodotto gym80.de).
+- Video: macchine da gym80 (pagine prodotto gym80.de), il resto da tutorial YouTube in italiano.
+
+## Dati online (GitHub)
+
+- Repo **pubblico** `salvatorenapolano/myWorkout-data` (cartella locale `../myWorkout-data`), con la stessa struttura degli asset: `assets/data/*.json`, `assets/images/exercises/*.svg`, `assets/images/muscles/*.webp`. Pubblico = niente dati personali (pesi e pesate restano sul telefono). Costanti in `RemoteDataConfig`.
+- Aggiornare: modificare i file sul sito di GitHub, oppure qui `python tool/sync_data_repo.py` e poi commit + push nel repo dei dati. Nell'app: cerchio SN → **Scarica gli ultimi dati**.
+- Come funziona (`lib/data/remote_data.dart`): API GitHub `commits/main` (ultimo commit) → `git/trees/<tree>?recursive=1` (file + hash) → scarica da `raw.githubusercontent.com/<owner>/<repo>/<commit>/<path>` **solo i file con hash cambiato** (gli altri li copia). Salva in `<support>/remote_data/<commit>/assets/...` e `current.json`. Prima di usarli li **valida** (scheda, dieta, spesa si leggono; ogni esercizio ha anteprima e illustrazione): se qualcosa non va tiene i dati vecchi e mostra l'errore.
+- `DataBundle` (CachingAssetBundle): cerca il file tra quelli scaricati, se non c'è usa `rootBundle`. Sta in `DefaultAssetBundle` (app.dart), quindi Image.asset, SvgPicture.asset e i repository leggono da lì. Dopo un aggiornamento `revision` cambia, `HomeShell` ha una Key nuova e le pagine si ricaricano; le cache di immagini e SVG vengono svuotate.
+- Limite: l'API GitHub senza login permette 60 richieste/ora (ogni aggiornamento ne usa 2). I dati scaricati vincono sempre su quelli dell'app, anche se l'app viene reinstallata con dati più nuovi: in quel caso "Torna ai dati dell'app".
 
 ## Build iPhone (da Windows)
 
@@ -132,6 +148,7 @@ File "myWorkout" con wireframe iniziali (pagine Wireframe/Componenti/Design, var
 ## Da fare / idee
 
 1. **Colazione e spuntini** quando arriva il PDF "La mia giornata".
-2. ~~Icona dell'app~~ ✅ fatta: 💪 Noto Emoji su gradiente petrolio (colore principale).
+2. ~~Icona dell'app~~ ✅ fatta: manubrio inclinato su gradiente petrolio (disegnato con Claude), con varianti iOS 18 scura e colorata.
 3. Possibili: timer di recupero, storico dei pesi degli esercizi, grafico delle pesate, schede future dopo il 27/11.
-4. Le descrizioni di plank laterale, leg raise e heel touch sono state scritte da Claude, non dal PT: da verificare.
+4. Le descrizioni di plank laterale, leg raise, heel touch e del riscaldamento nuovo, e tutti i "Consigli", sono state scritte da Claude, non dal PT: da verificare.
+6. Nei test `ExerciseMedia.videoEnabled = false` (in `widget_test.dart`): senza WebView il player YouTube non può partire.
